@@ -354,7 +354,7 @@ textarea.jd-textarea:focus { outline: none; border-color: var(--border-mid); }
 .tab-panel { display: none; padding: 1.5rem; }
 .tab-panel.active { display: block; }
 
-/* ── RESUME PREVIEW ── */
+/* ── RESUME PREVIEW — Flora's exact template ── */
 .doc-frame {
   max-width: 780px; margin: 0 auto;
   box-shadow: 0 4px 24px rgba(0,0,0,0.1);
@@ -362,29 +362,58 @@ textarea.jd-textarea:focus { outline: none; border-color: var(--border-mid); }
 }
 .resume-doc {
   font-family: 'Times New Roman', Times, serif;
-  font-size: 10.5pt; line-height: 1.45;
-  color: #1a1a1a; background: #fff;
-  padding: 0.75in;
+  font-size: 11pt; line-height: 1.45;
+  color: #000; background: #fff;
+  padding: 0.7in 0.8in;
 }
-.resume-doc h1 { font-size: 18pt; font-weight: bold; margin-bottom: 3px; }
-.resume-doc .contact-line { font-size: 9.5pt; color: #444; margin-bottom: 12px; }
-.resume-doc .section-title {
-  font-size: 10.5pt; font-weight: bold;
-  text-transform: uppercase; letter-spacing: 0.07em;
-  border-bottom: 1px solid #1a1a1a;
-  margin: 12px 0 6px; padding-bottom: 2px;
+/* Name — large, centered, bold */
+.resume-doc .r-name {
+  font-size: 22pt; font-weight: bold;
+  text-align: center; margin-bottom: 6px;
 }
-.resume-doc .job-row { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px; margin-bottom: 2px; }
-.resume-doc .job-title { font-weight: bold; font-size: 10.5pt; }
-.resume-doc .job-company { font-style: italic; }
-.resume-doc .job-date { font-size: 9.5pt; color: #555; white-space: nowrap; }
-.resume-doc ul { margin: 4px 0 8px 17px; padding: 0; }
-.resume-doc li { margin-bottom: 2px; font-size: 10pt; }
-.resume-doc .skills-row { font-size: 10pt; margin-bottom: 4px; }
-.resume-doc .skills-cat { font-weight: bold; }
-.resume-doc .edu-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
-.resume-doc .edu-degree { font-weight: bold; }
-.resume-doc .edu-date { font-size: 9.5pt; color: #555; }
+/* Contact line — centered, small icons via text */
+.resume-doc .r-contact {
+  text-align: center; font-size: 9.5pt;
+  color: #222; margin-bottom: 14px;
+}
+/* Section heading — left-aligned, bold, underlined full width */
+.resume-doc .r-section {
+  font-size: 11pt; font-weight: bold;
+  border-bottom: 1px solid #000;
+  margin: 13px 0 5px; padding-bottom: 1px;
+}
+/* Education block */
+.resume-doc .r-edu-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.resume-doc .r-edu-school { font-weight: bold; font-size: 11pt; }
+.resume-doc .r-edu-date { font-size: 10pt; font-style: italic; color: #222; }
+.resume-doc .r-edu-degree { font-style: italic; font-size: 10.5pt; margin-bottom: 2px; }
+/* Experience block — bold title + location right, then italic company + date right */
+.resume-doc .r-job-title-row {
+  display: flex; justify-content: space-between; align-items: baseline; margin-top: 7px;
+}
+.resume-doc .r-job-title { font-weight: bold; font-size: 11pt; }
+.resume-doc .r-job-location { font-size: 10pt; font-style: italic; color: #222; }
+.resume-doc .r-job-company-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.resume-doc .r-job-company { font-style: italic; font-size: 10.5pt; }
+.resume-doc .r-job-date { font-size: 10pt; font-style: italic; color: #222; }
+/* Bullet lists — circle bullets (○), indented */
+.resume-doc ul {
+  list-style: none; margin: 4px 0 4px 18px; padding: 0;
+}
+.resume-doc li {
+  font-size: 10.5pt; margin-bottom: 2px; position: relative; padding-left: 16px;
+}
+.resume-doc li::before {
+  content: '○'; position: absolute; left: 0; top: 0;
+  font-size: 9pt; line-height: 1.6;
+}
+/* Skills */
+.resume-doc .r-skills-row { font-size: 10.5pt; margin-bottom: 3px; }
+.resume-doc .r-skills-cat { font-weight: bold; }
 
 /* ── COVER LETTER PREVIEW ── */
 .cover-doc {
@@ -807,22 +836,58 @@ async function startGeneration() {
   setStep(2);
   startStatusCycle();
 
-  const prompt = `You are an elite resume writer. Given the full CV and job description below, produce a TAILORED ONE-PAGE resume and a professional cover letter.
+  const prompt = `You are an elite resume writer. Given the full CV and job description, produce a TAILORED ONE-PAGE resume and a cover letter.
 
-STRICT RULES:
-1. Select ONLY the 3–4 most relevant positions (quality over quantity).
-2. Rewrite bullet points to emphasise achievements/impact matching the JD — using the JD's language and keywords. Do NOT fabricate anything not in the CV.
-3. Reorder and trim the skills section to lead with what the job requires most.
-4. The resume MUST be concise enough to fit one printed page (2–4 tight bullets per role max).
-5. Education: one line only.
-6. Cover letter: 3–4 paragraphs, specific to the company/role, professional tone.
+CONTENT RULES:
+1. ALWAYS put Education first, before Experience.
+2. Select ONLY the 3–4 most relevant positions for the job (quality over quantity).
+3. Rewrite bullet points to emphasise achievements/impact matching the JD — use the JD's language and keywords. Do NOT fabricate anything not in the CV.
+4. Reorder and trim the skills section to lead with what the job requires most.
+5. The resume MUST fit one printed page — max 3 tight bullets per role, cut ruthlessly.
+6. Cover letter: 3–4 paragraphs, specific to company/role, professional tone.
 7. Return ONLY raw JSON — no markdown, no backticks, no preamble.
 
-JSON schema (return exactly this, no extra fields):
+TEMPLATE — use EXACTLY this HTML structure for resume_html (copy the class names exactly):
+
+<div class="r-name">Full Name</div>
+<p class="r-contact">✉ email &nbsp;|&nbsp; ✆ phone &nbsp;|&nbsp; in linkedin-url</p>
+
+<div class="r-section">Education</div>
+<div class="r-edu-header">
+  <span class="r-edu-school">University Name</span>
+  <span class="r-edu-date">Month Year – Month Year</span>
+</div>
+<div class="r-edu-degree">Degree – Specialization</div>
+<ul>
+  <li>Coursework: …</li>
+  <li>Awards: …</li>
+</ul>
+
+<div class="r-section">Experience</div>
+
+<div class="r-job-title-row">
+  <span class="r-job-title">Job Title</span>
+  <span class="r-job-location">City, Province</span>
+</div>
+<div class="r-job-company-row">
+  <span class="r-job-company">Company Name</span>
+  <span class="r-job-date">Month Year – Month Year</span>
+</div>
+<ul>
+  <li>Bullet one</li>
+  <li>Bullet two</li>
+</ul>
+
+(repeat job block for each role)
+
+<div class="r-section">Skills &amp; Technologies</div>
+<div class="r-skills-row"><span class="r-skills-cat">Category:</span> skill1, skill2, skill3</div>
+
+JSON schema:
 {
   "match_score": <integer 0-100>,
-  "resume_html": "<inner HTML using these CSS classes: name in <h1>, contact in <p class='contact-line'>, sections use <div class='section-title'>, each job uses <div class='job-row'><span class='job-title'>…</span> — <span class='job-company'>…</span><span class='job-date'>…</span></div> then <ul><li>bullets</li></ul>, skills use <div class='skills-row'><span class='skills-cat'>Category:</span> list</div>, education uses <div class='edu-row'><span class='edu-degree'>…</span><span class='edu-date'>…</span></div>>",
-  "cover_html": "<inner HTML using only <p> tags: date, blank line, hiring manager greeting, 3-4 body paragraphs, sign-off with candidate name>"
+  "resume_html": "<complete resume inner HTML using ONLY the classes above>",
+  "cover_html": "<inner HTML using only <p> tags: date, greeting, 3-4 paragraphs, sign-off>"
 }
 
 CANDIDATE NAME: ${name}
@@ -914,21 +979,25 @@ function downloadDoc(type) {
   const padding  = type === 'resume' ? '0.75in' : '1in';
 
   const resumeStyles = `
-    body{margin:0;font-family:'Times New Roman',Times,serif;font-size:10.5pt;line-height:1.45;color:#1a1a1a}
-    h1{font-size:18pt;font-weight:bold;margin-bottom:3px}
-    .contact-line{font-size:9.5pt;color:#444;margin-bottom:12px}
-    .section-title{font-size:10.5pt;font-weight:bold;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid #1a1a1a;margin:12px 0 6px;padding-bottom:2px}
-    .job-row{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px;margin-bottom:2px}
-    .job-title{font-weight:bold;font-size:10.5pt}
-    .job-company{font-style:italic}
-    .job-date{font-size:9.5pt;color:#555;white-space:nowrap}
-    ul{margin:4px 0 8px 17px;padding:0}
-    li{margin-bottom:2px;font-size:10pt}
-    .skills-row{font-size:10pt;margin-bottom:4px}
-    .skills-cat{font-weight:bold}
-    .edu-row{display:flex;justify-content:space-between;margin-bottom:3px}
-    .edu-degree{font-weight:bold}
-    .edu-date{font-size:9.5pt;color:#555}
+    body{margin:0;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.45;color:#000}
+    .r-name{font-size:22pt;font-weight:bold;text-align:center;margin-bottom:6px}
+    .r-contact{text-align:center;font-size:9.5pt;color:#222;margin-bottom:14px}
+    .r-section{font-size:11pt;font-weight:bold;border-bottom:1px solid #000;margin:13px 0 5px;padding-bottom:1px}
+    .r-edu-header{display:flex;justify-content:space-between;align-items:baseline}
+    .r-edu-school{font-weight:bold;font-size:11pt}
+    .r-edu-date{font-size:10pt;font-style:italic;color:#222}
+    .r-edu-degree{font-style:italic;font-size:10.5pt;margin-bottom:2px}
+    .r-job-title-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:7px}
+    .r-job-title{font-weight:bold;font-size:11pt}
+    .r-job-location{font-size:10pt;font-style:italic;color:#222}
+    .r-job-company-row{display:flex;justify-content:space-between;align-items:baseline}
+    .r-job-company{font-style:italic;font-size:10.5pt}
+    .r-job-date{font-size:10pt;font-style:italic;color:#222}
+    ul{list-style:none;margin:4px 0 4px 18px;padding:0}
+    li{font-size:10.5pt;margin-bottom:2px;position:relative;padding-left:16px}
+    li::before{content:'○';position:absolute;left:0;top:0;font-size:9pt;line-height:1.6}
+    .r-skills-row{font-size:10.5pt;margin-bottom:3px}
+    .r-skills-cat{font-weight:bold}
   `;
   const coverStyles = `
     body{margin:0;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.65;color:#1a1a1a}
