@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>MakeMyResume</title>
+<title>ResumeCraft — AI Resume Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet"/>
@@ -735,9 +735,17 @@ CRITICAL: Pick TOP 3–4 by score — NOT just most recent.
 ═══════════════════════
 STEP 3 — WRITE RESUME + COVER LETTER
 ═══════════════════════
-- Education ALWAYS first
-- 2–3 tight bullets per role — action verb, numbers from CV, JD keywords — never invent
-- Skills: JD-relevant first, cut unrelated
+- Education ALWAYS first, before Experience
+- 2–3 bullets per role. For EACH bullet follow these rules strictly:
+    • Start with a strong past-tense action verb
+    • Use the JD's exact language and keywords where truthful
+    • Include quantified results (numbers, %, $, time saved) from the CV wherever available
+    • AIM for bullets that fill roughly 1 to 1.5 lines when typeset — not a short stub, not a 3-line wrap
+    • If a bullet is very short (under ~60 chars), either merge it with adjacent content or expand it with context from the CV
+    • If a bullet would wrap past 2 lines, split or trim it
+    • Vary sentence length — not all bullets should be the same length
+    • Never invent facts not in the CV
+- Skills: JD-relevant categories first, cut irrelevant ones entirely
 - Must fit one printed page
 
 ═══════════════════════
@@ -762,7 +770,7 @@ OUTPUT — Return ONLY valid raw JSON, no markdown, no text outside the JSON.
 
   "cover_html": "<inner HTML: <p> tags only — date, Dear Hiring Manager, 3-4 paragraphs, Sincerely + name>",
 
-  "resume_tex": "<complete compilable LaTeX — \\documentclass[11pt,letterpaper]{article}, geometry 0.65in/0.8in margins, hyperref hidelinks, enumitem, \\pagestyle{empty}, centered bold name, contact line with \\href, Education first with \\circ bullets, Experience with bold title \\hfill italic location, italic company \\hfill italic date, \\circ bullets, Skills section>",
+  "resume_tex": "<complete standalone LaTeX document using the RenderCV template below — fill in all NAME/EMAIL/PHONE/LINKEDIN/GITHUB placeholders with real data from the CV, and fill in all sections with the tailored content. Escape all special LaTeX chars: & \& | % \% | $ \$ | # \# | _ \_ | { \{ | } \} | ~ \textasciitilde{} | ^ \textasciicircum{} | \ \textbackslash{}. For the contact line use \\faEnvelope, \\faPhone*, \\faLinkedinIn, \\faGithub icons. Use twocolentry for each job/edu entry with the date in the right column. Use the highlights environment for bullets. Keep the exact preamble, environments, and spacing from the template.",
 
   "cover_tex": "<complete compilable LaTeX cover letter — article class, 1in margins, professional letter format>",
 
@@ -814,6 +822,129 @@ HTML TEMPLATE:
 <div class="r-section">Skills &amp; Technologies</div>
 <div class="r-skills-row"><span class="r-skills-cat">Category:</span> skill1, skill2</div>
 
+LATEX RESUME TEMPLATE — use this EXACT structure and preamble. Replace placeholders in ALLCAPS with real data.
+
+\\documentclass[10pt, letterpaper]{article}
+\\usepackage[ignoreheadfoot,top=2cm,bottom=2cm,left=2cm,right=2cm,footskip=1.0cm]{geometry}
+\\usepackage{titlesec}
+\\usepackage{tabularx}
+\\usepackage{array}
+\\usepackage[dvipsnames]{xcolor}
+\\definecolor{primaryColor}{RGB}{0, 79, 144}
+\\usepackage{enumitem}
+\\usepackage{fontawesome5}
+\\usepackage{amsmath}
+\\usepackage[pdftitle={CANDIDATE_NAME CV},pdfauthor={CANDIDATE_NAME},colorlinks=true,urlcolor=primaryColor]{hyperref}
+\\usepackage[pscoord]{eso-pic}
+\\usepackage{calc}
+\\usepackage{bookmark}
+\\usepackage{lastpage}
+\\usepackage{changepage}
+\\usepackage{paracol}
+\\usepackage{ifthen}
+\\usepackage{needspace}
+\\usepackage{iftex}
+\\ifPDFTeX
+    \\usepackage[utf8]{inputenc}
+    \\usepackage{lmodern}
+\\fi
+\\AtBeginEnvironment{adjustwidth}{\\partopsep0pt}
+\\pagestyle{empty}
+\\setcounter{secnumdepth}{0}
+\\setlength{\\parindent}{0pt}
+\\setlength{\\topskip}{0pt}
+\\setlength{\\columnsep}{0cm}
+\\titleformat{\\section}{\\needspace{4\\baselineskip}\\bfseries\\large}{}{0pt}{}[\\vspace{1pt}\\titlerule]
+\\titlespacing{\\section}{-1pt}{0.3cm}{0.2cm}
+\\renewcommand\\labelitemi{$\\circ$}
+\\newenvironment{highlights}{\\begin{itemize}[topsep=0.10cm,parsep=0.10cm,partopsep=0pt,itemsep=0pt,leftmargin=0.4cm+10pt]}{\\end{itemize}}
+\\newenvironment{highlightsforbulletentries}{\\begin{itemize}[topsep=0.10cm,parsep=0.10cm,partopsep=0pt,itemsep=0pt,leftmargin=10pt]}{\\end{itemize}}
+\\newenvironment{onecolentry}{\\begin{adjustwidth}{0.2cm+0.00001cm}{0.2cm+0.00001cm}}{\\end{adjustwidth}}
+\\newenvironment{twocolentry}[2][]{\\onecolentry\\def\\secondColumn{#2}\\setcolumnwidth{\\fill,4.5cm}\\begin{paracol}{2}}{\\switchcolumn\\raggedleft\\secondColumn\\end{paracol}\\endonecolentry}
+\\newenvironment{header}{\\setlength{\\topsep}{0pt}\\par\\kern\\topsep\\centering\\linespread{1.5}}{\\par\\kern\\topsep}
+\\let\\hrefWithoutArrow\\href
+\\renewcommand{\\href}[2]{\\hrefWithoutArrow{#1}{\\ifthenelse{\\equal{#2}{}}{}{#2 }\\raisebox{.15ex}{\\footnotesize \\faExternalLink*}}}
+\\newcommand{\\AND}{\\unskip\\cleaders\\copy\\ANDbox\\hskip\\wd\\ANDbox\\ignorespaces}
+\\newsavebox\\ANDbox
+\\sbox\\ANDbox{}
+
+\\begin{document}
+
+\\begin{header}
+    \\textbf{\\fontsize{24pt}{24pt}\\selectfont CANDIDATE_NAME}
+    \\vspace{0.3cm}
+    \\normalsize
+    \\mbox{\\hrefWithoutArrow{mailto:EMAIL}{\\color{black}{\\footnotesize\\faEnvelope[regular]}\\hspace*{0.13cm}EMAIL}}%
+    \\kern 0.25cm\\AND\\kern 0.25cm%
+    \\mbox{\\hrefWithoutArrow{tel:PHONE}{\\color{black}{\\footnotesize\\faPhone*}\\hspace*{0.13cm}PHONE}}%
+    \\kern 0.25cm\\AND\\kern 0.25cm%
+    \\mbox{\\hrefWithoutArrow{LINKEDIN_URL}{\\color{black}{\\footnotesize\\faLinkedinIn}\\hspace*{0.13cm}LINKEDIN_HANDLE}}%
+\\end{header}
+
+\\vspace{0.3cm}
+
+\\section{Education}
+
+\\begin{twocolentry}{\\textit{START -- END}}
+    \\textbf{UNIVERSITY NAME}
+    \\textit{DEGREE}
+\\end{twocolentry}
+\\vspace{0.10cm}
+\\begin{onecolentry}
+    \\begin{highlights}
+        \\item \\textbf{Coursework:} RELEVANT COURSES
+        \\item RELEVANT AWARD OR ACHIEVEMENT
+    \\end{highlights}
+\\end{onecolentry}
+
+\\section{Experience}
+
+\\begin{twocolentry}{\\textit{CITY, PROV}\\\\\\textit{START -- END}}
+    \\textbf{JOB TITLE}
+    \\textit{COMPANY}
+\\end{twocolentry}
+\\vspace{0.10cm}
+\\begin{onecolentry}
+    \\begin{highlights}
+        \\item BULLET ONE
+        \\item BULLET TWO
+    \\end{highlights}
+\\end{onecolentry}
+
+\\vspace{0.2cm}
+(repeat twocolentry block for each role, with \\vspace{0.2cm} between them)
+
+\\section{Key Projects}
+
+\\begin{twocolentry}{\\textit{YEAR or DATE RANGE}}
+    \\textbf{PROJECT NAME}
+\\end{twocolentry}
+\\vspace{0.10cm}
+\\begin{onecolentry}
+    \\begin{highlights}
+        \\item BULLET
+    \\end{highlights}
+\\end{onecolentry}
+
+\\section{Skills \\& Technologies}
+
+\\begin{onecolentry}
+    \\textbf{CATEGORY:} skill1, skill2, skill3
+\\end{onecolentry}
+\\vspace{0.2cm}
+\\begin{onecolentry}
+    \\textbf{CATEGORY:} skill1, skill2
+\\end{onecolentry}
+
+\\end{document}
+
+IMPORTANT LATEX RULES:
+- Include Key Projects section ONLY if projects are relevant and space permits
+- Every & must be \\&, every % must be \\%, every _ must be \\_, every $ must be \\$, every # must be \\#
+- Use \\textasciitilde{} for ~, \\textbackslash{} for backslash
+- Numbers like 50\\% and 95\\% need the backslash before %
+- Do NOT include \\input{glyphtounicode} or \\pdfgentounicode lines
+
 CANDIDATE NAME: ${name}
 FULL CV:
 ${cv}
@@ -821,7 +952,7 @@ JOB DESCRIPTION:
 ${jd}`;
 
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:8000,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:10000,messages:[{role:'user',content:prompt}]})});
     stopStatusCycle();
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${res.status}`);}
     const data=await res.json();
