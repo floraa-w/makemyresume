@@ -769,7 +769,7 @@ STEP 3 — WRITE RESUME + COVER LETTER
     • Vary sentence length — not all bullets should be the same length
     • Never invent facts not in the CV
 - Skills: JD-relevant categories first, cut irrelevant ones entirely
-- Must fit one printed page
+- MUST FIT EXACTLY ONE PRINTED PAGE — this is non-negotiable. The LaTeX template uses 10pt font with 2cm margins on letter paper. Budget ruthlessly: max 3 roles × 2 bullets each + education + skills. If content is tight, drop Key Projects entirely. Never let the resume spill to page 2.
 
 ═══════════════════════
 STEP 4 — GAP ANALYSIS
@@ -845,7 +845,14 @@ HTML TEMPLATE:
 <div class="r-section">Skills &amp; Technologies</div>
 <div class="r-skills-row"><span class="r-skills-cat">Category:</span> skill1, skill2</div>
 
-LATEX RESUME TEMPLATE — use this EXACT structure and preamble. Replace placeholders in ALLCAPS with real data.
+LATEX RESUME TEMPLATE — copy this EXACTLY. Replace only the ALLCAPS placeholders with real content.
+
+CRITICAL RULES BEFORE YOU START:
+1. ONE PAGE ONLY — if content overflows, cut bullets ruthlessly: drop to 1-2 bullets per role, shorten bullets, remove least-relevant roles, remove Key Projects section entirely. The PDF must be exactly 1 page.
+2. The name and the contact line MUST be on SEPARATE lines — the \\vspace{0.3cm}\\\\[4pt] separates them. Never put them on the same line.
+3. Do NOT use \\newcommand{\\AND} — use the exact \\AND macro defined in the preamble via \\newsavebox.
+4. Every special char: & → \\&, % → \\%, _ → \\_, $ → \\$, # → \\#, ~ → \\textasciitilde{}, \\ → \\textbackslash{}
+5. Do NOT add \\input{glyphtounicode} or \\pdfgentounicode
 
 \\documentclass[10pt, letterpaper]{article}
 \\usepackage[ignoreheadfoot,top=2cm,bottom=2cm,left=2cm,right=2cm,footskip=1.0cm]{geometry}
@@ -881,92 +888,113 @@ LATEX RESUME TEMPLATE — use this EXACT structure and preamble. Replace placeho
 \\titlespacing{\\section}{-1pt}{0.3cm}{0.2cm}
 \\renewcommand\\labelitemi{$\\circ$}
 \\newenvironment{highlights}{\\begin{itemize}[topsep=0.10cm,parsep=0.10cm,partopsep=0pt,itemsep=0pt,leftmargin=0.4cm+10pt]}{\\end{itemize}}
-\\newenvironment{highlightsforbulletentries}{\\begin{itemize}[topsep=0.10cm,parsep=0.10cm,partopsep=0pt,itemsep=0pt,leftmargin=10pt]}{\\end{itemize}}
 \\newenvironment{onecolentry}{\\begin{adjustwidth}{0.2cm+0.00001cm}{0.2cm+0.00001cm}}{\\end{adjustwidth}}
 \\newenvironment{twocolentry}[2][]{\\onecolentry\\def\\secondColumn{#2}\\setcolumnwidth{\\fill,4.5cm}\\begin{paracol}{2}}{\\switchcolumn\\raggedleft\\secondColumn\\end{paracol}\\endonecolentry}
 \\newenvironment{header}{\\setlength{\\topsep}{0pt}\\par\\kern\\topsep\\centering\\linespread{1.5}}{\\par\\kern\\topsep}
 \\let\\hrefWithoutArrow\\href
 \\renewcommand{\\href}[2]{\\hrefWithoutArrow{#1}{\\ifthenelse{\\equal{#2}{}}{}{#2 }\\raisebox{.15ex}{\\footnotesize \\faExternalLink*}}}
-\\newcommand{\\AND}{\\unskip\\cleaders\\copy\\ANDbox\\hskip\\wd\\ANDbox\\ignorespaces}
 \\newsavebox\\ANDbox
-\\sbox\\ANDbox{}
+\\sbox\\ANDbox{\\kern0.05cm\\textbullet\\kern0.05cm}
+\\newcommand{\\AND}{\\unskip\\cleaders\\copy\\ANDbox\\hskip\\wd\\ANDbox\\ignorespaces}
 
 \\begin{document}
 
+% HEADER — name on its own line, then a line break, then contact icons on one line
 \\begin{header}
     \\textbf{\\fontsize{24pt}{24pt}\\selectfont CANDIDATE_NAME}
+
     \\vspace{0.3cm}
+
     \\normalsize
     \\mbox{\\hrefWithoutArrow{mailto:EMAIL}{\\color{black}{\\footnotesize\\faEnvelope[regular]}\\hspace*{0.13cm}EMAIL}}%
-    \\kern 0.25cm\\AND\\kern 0.25cm%
+    \\kern 0.25cm%
+    \\AND%
+    \\kern 0.25cm%
     \\mbox{\\hrefWithoutArrow{tel:PHONE}{\\color{black}{\\footnotesize\\faPhone*}\\hspace*{0.13cm}PHONE}}%
-    \\kern 0.25cm\\AND\\kern 0.25cm%
+    \\kern 0.25cm%
+    \\AND%
+    \\kern 0.25cm%
     \\mbox{\\hrefWithoutArrow{LINKEDIN_URL}{\\color{black}{\\footnotesize\\faLinkedinIn}\\hspace*{0.13cm}LINKEDIN_HANDLE}}%
 \\end{header}
 
-\\vspace{0.3cm}
+\\vspace{0.3cm - 0.3cm}
 
+% EDUCATION
 \\section{Education}
 
-\\begin{twocolentry}{\\textit{START -- END}}
+\\begin{twocolentry}{
+    \\textit{START\_DATE -- END\_DATE}
+}
     \\textbf{UNIVERSITY NAME}
-    \\textit{DEGREE}
+
+    \\textit{DEGREE PROGRAM}
 \\end{twocolentry}
-\\vspace{0.10cm}
+
+\\vspace{0.10 cm}
 \\begin{onecolentry}
     \\begin{highlights}
-        \\item \\textbf{Coursework:} RELEVANT COURSES
-        \\item RELEVANT AWARD OR ACHIEVEMENT
+        \\item \\textbf{Coursework:} RELEVANT COURSES ONLY
+        \\item RELEVANT AWARD IF SPACE PERMITS
     \\end{highlights}
 \\end{onecolentry}
 
+% EXPERIENCE
 \\section{Experience}
 
-\\begin{twocolentry}{\\textit{CITY, PROV}\\\\\\textit{START -- END}}
+\\begin{twocolentry}{
+\\textit{CITY, PROV}
+
+\\textit{START\_DATE -- END\_DATE}
+}
     \\textbf{JOB TITLE}
-    \\textit{COMPANY}
+
+    \\textit{COMPANY NAME}
 \\end{twocolentry}
-\\vspace{0.10cm}
+
+\\vspace{0.10 cm}
 \\begin{onecolentry}
     \\begin{highlights}
-        \\item BULLET ONE
-        \\item BULLET TWO
+        \\item BULLET\_1 — keep to 1–1.5 lines, action verb, quantified result
+        \\item BULLET\_2
     \\end{highlights}
 \\end{onecolentry}
 
-\\vspace{0.2cm}
-(repeat twocolentry block for each role, with \\vspace{0.2cm} between them)
+\\vspace{0.2 cm}
 
+% repeat the above twocolentry+highlights block for each additional role, separated by \\vspace{0.2 cm}
+
+% KEY PROJECTS — include ONLY if space remains on one page; omit entirely if tight
 \\section{Key Projects}
 
-\\begin{twocolentry}{\\textit{YEAR or DATE RANGE}}
+\\begin{twocolentry}{
+    \\textit{YEAR}
+}
     \\textbf{PROJECT NAME}
 \\end{twocolentry}
-\\vspace{0.10cm}
+
+\\vspace{0.10 cm}
 \\begin{onecolentry}
     \\begin{highlights}
         \\item BULLET
     \\end{highlights}
 \\end{onecolentry}
 
+% SKILLS
 \\section{Skills \\& Technologies}
 
 \\begin{onecolentry}
     \\textbf{CATEGORY:} skill1, skill2, skill3
 \\end{onecolentry}
-\\vspace{0.2cm}
+
+\\vspace{0.2 cm}
+
 \\begin{onecolentry}
     \\textbf{CATEGORY:} skill1, skill2
 \\end{onecolentry}
 
 \\end{document}
 
-IMPORTANT LATEX RULES:
-- Include Key Projects section ONLY if projects are relevant and space permits
-- Every & must be \\&, every % must be \\%, every _ must be \\_, every $ must be \\$, every # must be \\#
-- Use \\textasciitilde{} for ~, \\textbackslash{} for backslash
-- Numbers like 50\\% and 95\\% need the backslash before %
-- Do NOT include \\input{glyphtounicode} or \\pdfgentounicode lines
+ONE PAGE ENFORCEMENT: After writing the full content, mentally count lines. A letter page at 10pt with these margins fits approximately 52–55 lines of body text. If you exceed that, remove in this order: (1) cut education awards bullet, (2) trim each bullet to 1 line, (3) remove Key Projects, (4) drop the lowest-scoring role entirely.
 
 CANDIDATE NAME: ${name}
 FULL CV:
