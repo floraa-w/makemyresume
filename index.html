@@ -378,34 +378,23 @@ footer a:hover{color:var(--text)}
         <button class="tab-btn" onclick="switchTab('latex-cover')">{ } Cover letter LaTeX</button>
       </div>
 
-      <!-- Resume PDF preview via texlive.net -->
       <div class="tab-panel active" id="tab-resume">
-        <div id="resume-compile-status" style="display:none;padding:2rem;text-align:center;color:var(--text-2);font-size:13px">
-          <div class="spinner" style="margin:0 auto 1rem"></div>
-          Compiling LaTeX — this takes 10–20 seconds…
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:.75rem 1rem;background:var(--green-light);border:1px solid var(--green-pale);border-radius:var(--r);margin-bottom:1.25rem">
+          <div style="font-size:13px;color:var(--green)">This is an <strong>HTML approximation</strong> of your resume. For the exact typeset PDF, open in Overleaf — it compiles in seconds and you can download directly from there.</div>
+          <button class="btn-dl overleaf" onclick="openOverleafAndCompile('resume')" style="flex-shrink:0">▶ Open in Overleaf → compile &amp; download PDF</button>
         </div>
-        <div id="resume-compile-error" style="display:none;padding:1rem;background:var(--red-bg);border-radius:var(--r);margin:1rem;font-size:13px;color:var(--red)"></div>
-        <div class="doc-frame" id="resume-pdf-frame-wrap" style="display:none">
-          <iframe id="resume-pdf-iframe" style="width:100%;height:900px;border:none;display:block" title="Resume PDF preview"></iframe>
-        </div>
-        <!-- Fallback HTML preview (hidden by default, shown if compile fails) -->
-        <div class="doc-frame" id="resume-html-frame-wrap" style="display:none">
-          <div class="resume-doc" id="resume-preview"></div>
+        <div id="resume-html-frame-wrap">
+          <div class="doc-frame"><div class="resume-doc" id="resume-preview"></div></div>
         </div>
       </div>
 
-      <!-- Cover letter PDF preview -->
       <div class="tab-panel" id="tab-cover">
-        <div id="cover-compile-status" style="display:none;padding:2rem;text-align:center;color:var(--text-2);font-size:13px">
-          <div class="spinner" style="margin:0 auto 1rem"></div>
-          Compiling LaTeX cover letter…
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:.75rem 1rem;background:var(--green-light);border:1px solid var(--green-pale);border-radius:var(--r);margin-bottom:1.25rem">
+          <div style="font-size:13px;color:var(--green)">This is an <strong>HTML approximation</strong> of your cover letter. Open in Overleaf for the final typeset PDF.</div>
+          <button class="btn-dl overleaf" onclick="openOverleafAndCompile('cover')" style="flex-shrink:0">▶ Open in Overleaf → compile &amp; download PDF</button>
         </div>
-        <div id="cover-compile-error" style="display:none;padding:1rem;background:var(--red-bg);border-radius:var(--r);margin:1rem;font-size:13px;color:var(--red)"></div>
-        <div class="doc-frame" id="cover-pdf-frame-wrap" style="display:none">
-          <iframe id="cover-pdf-iframe" style="width:100%;height:900px;border:none;display:block" title="Cover letter PDF preview"></iframe>
-        </div>
-        <div class="doc-frame" id="cover-html-frame-wrap" style="display:none">
-          <div class="cover-doc" id="cover-preview"></div>
+        <div id="cover-html-frame-wrap">
+          <div class="doc-frame"><div class="cover-doc" id="cover-preview"></div></div>
         </div>
       </div>
 
@@ -434,7 +423,7 @@ footer a:hover{color:var(--text)}
           <div class="latex-info">Full LaTeX source for your resume. Download the <code>.tex</code> file and compile with <code>pdflatex</code>, or click <strong>Open in Overleaf</strong> to compile instantly — no account needed.</div>
           <div class="latex-actions">
             <button class="btn-dl primary" onclick="downloadTex('resume')">⬇ Download resume.tex</button>
-            <button class="btn-dl overleaf" onclick="openOverleaf('resume')">▶ Open in Overleaf</button>
+            <button class="btn-dl overleaf" onclick="openOverleafAndCompile('resume')">▶ Open in Overleaf</button>
           </div>
           <pre class="latex-code" id="latex-resume-display"></pre>
         </div>
@@ -445,7 +434,7 @@ footer a:hover{color:var(--text)}
           <div class="latex-info">Full LaTeX source for your cover letter. Download or open in Overleaf to compile instantly.</div>
           <div class="latex-actions">
             <button class="btn-dl primary" onclick="downloadTex('cover')">⬇ Download cover_letter.tex</button>
-            <button class="btn-dl overleaf" onclick="openOverleaf('cover')">▶ Open in Overleaf</button>
+            <button class="btn-dl overleaf" onclick="openOverleafAndCompile('cover')">▶ Open in Overleaf</button>
           </div>
           <pre class="latex-code" id="latex-cover-display"></pre>
         </div>
@@ -462,11 +451,10 @@ footer a:hover{color:var(--text)}
       </div>
 
       <div class="action-row">
-        <button class="btn-dl primary" id="btn-dl-resume" onclick="downloadCompiledPDF('resume')">⬇ Resume PDF</button>
-        <button class="btn-dl primary" id="btn-dl-cover" onclick="downloadCompiledPDF('cover')">⬇ Cover letter PDF</button>
+        <button class="btn-dl overleaf" id="btn-dl-resume" onclick="openOverleafAndCompile('resume')">▶ Resume → Overleaf PDF</button>
+        <button class="btn-dl overleaf" id="btn-dl-cover" onclick="openOverleafAndCompile('cover')">▶ Cover letter → Overleaf PDF</button>
         <button class="btn-dl secondary" onclick="downloadTex('resume')">⬇ resume.tex</button>
         <button class="btn-dl secondary" onclick="downloadTex('cover')">⬇ cover_letter.tex</button>
-        <button class="btn-dl overleaf" onclick="openOverleaf('resume')">▶ Overleaf</button>
         <button class="btn-dl secondary" style="margin-left:auto" onclick="resetApp()">Start over</button>
       </div>
     </div>
@@ -769,7 +757,7 @@ STEP 3 — WRITE RESUME + COVER LETTER
     • Vary sentence length — not all bullets should be the same length
     • Never invent facts not in the CV
 - Skills: JD-relevant categories first, cut irrelevant ones entirely
-- MUST FIT EXACTLY ONE PRINTED PAGE — this is non-negotiable. The LaTeX template uses 10pt font with 2cm margins on letter paper. Budget ruthlessly: max 3 roles × 2 bullets each + education + skills. If content is tight, drop Key Projects entirely. Never let the resume spill to page 2.
+- TARGET: fill 90–100% of one printed page — not more, not much less. The LaTeX template is 10pt font, 2cm margins, letter paper. A good resume should feel dense and complete, not sparse. Aim for 3–4 roles with 2–3 bullets each. Include Key Projects if space allows. Only cut content if it genuinely overflows past one page.
 
 ═══════════════════════
 STEP 4 — GAP ANALYSIS
@@ -994,7 +982,7 @@ CRITICAL RULES BEFORE YOU START:
 
 \\end{document}
 
-ONE PAGE ENFORCEMENT: After writing the full content, mentally count lines. A letter page at 10pt with these margins fits approximately 52–55 lines of body text. If you exceed that, remove in this order: (1) cut education awards bullet, (2) trim each bullet to 1 line, (3) remove Key Projects, (4) drop the lowest-scoring role entirely.
+PAGE LENGTH: A letter page at 10pt with these margins fits approximately 52–55 lines of body text. TARGET 90–100% of the page — the resume should look full and professional. Include 3–4 roles, 2–3 bullets each, plus education with relevant coursework/awards, Key Projects if relevant, and a skills section with 3–4 categories. Only cut content if you genuinely exceed ~55 lines: first trim the longest bullets, then remove Key Projects, then drop the lowest-scoring role.
 
 CANDIDATE NAME: ${name}
 FULL CV:
@@ -1054,137 +1042,49 @@ function resetApp(){
   document.getElementById('btn-gen').disabled=false;
   document.getElementById('match-fill').style.width='0';
   document.getElementById('reasoning-card').classList.remove('show');
-  // Clear compiled PDFs
   resumePDFBlob=null; coverPDFBlob=null;
-  ['resume','cover'].forEach(t=>{
-    const ifrEl=document.getElementById(t+'-pdf-iframe');
-    if(ifrEl) ifrEl.src='';
-    const pdfW=document.getElementById(t+'-pdf-frame-wrap');
-    const htmlW=document.getElementById(t+'-html-frame-wrap');
-    const errW=document.getElementById(t+'-compile-error');
-    const statW=document.getElementById(t+'-compile-status');
-    if(pdfW) pdfW.style.display='none';
-    if(htmlW) htmlW.style.display='none';
-    if(errW) errW.style.display='none';
-    if(statW) statW.style.display='none';
-  });
   allBlocks=[];clearError();setStep(1);switchTab('resume');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ── LATEX COMPILE via texlive.net ──
-// Stores compiled PDF blobs for download
+// ── LATEX: OVERLEAF IS THE COMPILER ──
 let resumePDFBlob = null;
 let coverPDFBlob = null;
 
-async function compileLatex(type) {
+// Open in Overleaf — this is the primary compile path, no external dependencies
+function openOverleafAndCompile(type) {
   const tex = type === 'resume' ? resumeTex : coverTex;
-  if (!tex) return;
+  if (!tex) { alert('No LaTeX content — please generate first.'); return; }
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = 'https://www.overleaf.com/docs';
+  form.target = '_blank';
+  const snip = document.createElement('input');
+  snip.type = 'hidden'; snip.name = 'snip'; snip.value = tex;
+  const snip_name = document.createElement('input');
+  snip_name.type = 'hidden'; snip_name.name = 'snip_name';
+  snip_name.value = type === 'resume' ? 'resume.tex' : 'cover_letter.tex';
+  form.appendChild(snip); form.appendChild(snip_name);
+  document.body.appendChild(form); form.submit();
+  document.body.removeChild(form);
+}
 
+// "Download PDF" = open in Overleaf so user can compile and download there
+function downloadCompiledPDF(type) {
+  openOverleafAndCompile(type);
+}
+
+// Preview: show the LaTeX source in a nice rendered view, with a prominent Overleaf button
+function compileLatex(type) {
   const statusEl = document.getElementById(type + '-compile-status');
   const errorEl  = document.getElementById(type + '-compile-error');
   const pdfWrap  = document.getElementById(type + '-pdf-frame-wrap');
   const htmlWrap = document.getElementById(type + '-html-frame-wrap');
-  const iframe   = document.getElementById(type + '-pdf-iframe');
 
-  statusEl.style.display = 'block';
-  errorEl.style.display  = 'none';
-  pdfWrap.style.display  = 'none';
-  htmlWrap.style.display = 'none';
-
-  try {
-    // texlive.net accepts a POST with the .tex source and returns a PDF
-    const formData = new FormData();
-    formData.append('return', 'pdf');
-    formData.append('engine', 'pdflatex');
-    formData.append('file', new Blob([tex], {type:'text/plain'}), 'document.tex');
-
-    const res = await fetch('https://texlive.net/cgi-bin/latexcgi', {
-      method: 'POST',
-      body: formData
-    });
-
-    if (!res.ok) throw new Error(`Compile server returned ${res.status}`);
-
-    const contentType = res.headers.get('content-type') || '';
-    if (!contentType.includes('pdf')) {
-      // Got back an error log instead of PDF
-      const errText = await res.text();
-      throw new Error('LaTeX compile error:\n' + errText.slice(0, 600));
-    }
-
-    const blob = await res.blob();
-    if (type === 'resume') resumePDFBlob = blob;
-    else coverPDFBlob = blob;
-
-    const url = URL.createObjectURL(blob);
-    iframe.src = url;
-    statusEl.style.display = 'none';
-    pdfWrap.style.display  = 'block';
-
-  } catch (err) {
-    statusEl.style.display = 'none';
-    // Fall back to HTML preview
-    htmlWrap.style.display = 'block';
-    errorEl.style.display  = 'block';
-    errorEl.innerHTML = `<strong>LaTeX compile failed</strong> — showing HTML preview instead.<br><small style="opacity:.7">${err.message.replace(/\n/g,'<br>').slice(0,300)}</small><br><br>You can still download the .tex file and compile it yourself, or use <a href="#" onclick="openOverleaf('${type}');return false" style="color:var(--red)">Overleaf</a>.`;
-    console.error('LaTeX compile error:', err);
-  }
-}
-
-async function downloadCompiledPDF(type) {
-  const blob = type === 'resume' ? resumePDFBlob : coverPDFBlob;
-  const btn  = document.getElementById('btn-dl-' + type);
-
-  if (blob) {
-    // Already compiled — download immediately
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = type === 'resume' ? 'resume.pdf' : 'cover_letter.pdf';
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
-    return;
-  }
-
-  // Need to compile first
-  const orig = btn ? btn.textContent : '';
-  if (btn) { btn.textContent = 'Compiling…'; btn.disabled = true; }
-
-  const tex = type === 'resume' ? resumeTex : coverTex;
-  if (!tex) { alert('No LaTeX content — please generate first.'); if(btn){btn.textContent=orig;btn.disabled=false;} return; }
-
-  try {
-    const formData = new FormData();
-    formData.append('return', 'pdf');
-    formData.append('engine', 'pdflatex');
-    formData.append('file', new Blob([tex], {type:'text/plain'}), 'document.tex');
-
-    const res = await fetch('https://texlive.net/cgi-bin/latexcgi', {
-      method: 'POST',
-      body: formData
-    });
-
-    const contentType = res.headers.get('content-type') || '';
-    if (!res.ok || !contentType.includes('pdf')) {
-      const errText = await res.text().catch(() => '');
-      throw new Error('Compile failed. Try Overleaf instead.\n' + errText.slice(0,200));
-    }
-
-    const dlBlob = await res.blob();
-    if (type === 'resume') resumePDFBlob = dlBlob;
-    else coverPDFBlob = dlBlob;
-
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(dlBlob);
-    a.download = type === 'resume' ? 'resume.pdf' : 'cover_letter.pdf';
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
-
-  } catch(err) {
-    alert('PDF download failed: ' + err.message);
-  } finally {
-    if (btn) { btn.textContent = orig; btn.disabled = false; }
-  }
+  if (statusEl) statusEl.style.display = 'none';
+  if (errorEl)  errorEl.style.display  = 'none';
+  if (pdfWrap)  pdfWrap.style.display  = 'none';
+  if (htmlWrap) htmlWrap.style.display = 'block';
 }
 
 // ── DOWNLOAD .tex ──
@@ -1197,15 +1097,7 @@ function downloadTex(type){
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 }
 
-// ── OVERLEAF ──
-function openOverleaf(type){
-  const content=type==='resume'?resumeTex:coverTex;
-  if(!content){alert('No LaTeX content — please generate first.');return;}
-  const form=document.createElement('form');form.method='POST';form.action='https://www.overleaf.com/docs';form.target='_blank';
-  const snip=document.createElement('input');snip.type='hidden';snip.name='snip';snip.value=content;
-  const snip_name=document.createElement('input');snip_name.type='hidden';snip_name.name='snip_name';snip_name.value=type==='resume'?'resume.tex':'cover_letter.tex';
-  form.appendChild(snip);form.appendChild(snip_name);document.body.appendChild(form);form.submit();document.body.removeChild(form);
-}
+// openOverleaf → replaced by openOverleafAndCompile above
 
 
 </script>
