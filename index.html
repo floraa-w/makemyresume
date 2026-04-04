@@ -376,15 +376,37 @@ footer a:hover{color:var(--text)}
         <button class="tab-btn" onclick="switchTab('blocks')">⠿ Edit blocks</button>
         <button class="tab-btn" onclick="switchTab('latex-resume')">{ } Resume LaTeX</button>
         <button class="tab-btn" onclick="switchTab('latex-cover')">{ } Cover letter LaTeX</button>
-        <button class="tab-btn" onclick="switchTab('edit-html')">✏️ Edit HTML</button>
       </div>
 
+      <!-- Resume PDF preview via texlive.net -->
       <div class="tab-panel active" id="tab-resume">
-        <div class="doc-frame"><div class="resume-doc" id="resume-preview"></div></div>
+        <div id="resume-compile-status" style="display:none;padding:2rem;text-align:center;color:var(--text-2);font-size:13px">
+          <div class="spinner" style="margin:0 auto 1rem"></div>
+          Compiling LaTeX — this takes 10–20 seconds…
+        </div>
+        <div id="resume-compile-error" style="display:none;padding:1rem;background:var(--red-bg);border-radius:var(--r);margin:1rem;font-size:13px;color:var(--red)"></div>
+        <div class="doc-frame" id="resume-pdf-frame-wrap" style="display:none">
+          <iframe id="resume-pdf-iframe" style="width:100%;height:900px;border:none;display:block" title="Resume PDF preview"></iframe>
+        </div>
+        <!-- Fallback HTML preview (hidden by default, shown if compile fails) -->
+        <div class="doc-frame" id="resume-html-frame-wrap" style="display:none">
+          <div class="resume-doc" id="resume-preview"></div>
+        </div>
       </div>
 
+      <!-- Cover letter PDF preview -->
       <div class="tab-panel" id="tab-cover">
-        <div class="doc-frame"><div class="cover-doc" id="cover-preview"></div></div>
+        <div id="cover-compile-status" style="display:none;padding:2rem;text-align:center;color:var(--text-2);font-size:13px">
+          <div class="spinner" style="margin:0 auto 1rem"></div>
+          Compiling LaTeX cover letter…
+        </div>
+        <div id="cover-compile-error" style="display:none;padding:1rem;background:var(--red-bg);border-radius:var(--r);margin:1rem;font-size:13px;color:var(--red)"></div>
+        <div class="doc-frame" id="cover-pdf-frame-wrap" style="display:none">
+          <iframe id="cover-pdf-iframe" style="width:100%;height:900px;border:none;display:block" title="Cover letter PDF preview"></iframe>
+        </div>
+        <div class="doc-frame" id="cover-html-frame-wrap" style="display:none">
+          <div class="cover-doc" id="cover-preview"></div>
+        </div>
       </div>
 
       <!-- DRAG-AND-DROP BLOCKS -->
@@ -440,9 +462,10 @@ footer a:hover{color:var(--text)}
       </div>
 
       <div class="action-row">
-        <button class="btn-dl primary" onclick="downloadHTMLasPDF('resume')">⬇ Resume PDF</button>
-        <button class="btn-dl primary" onclick="downloadHTMLasPDF('cover')">⬇ Cover letter PDF</button>
-        <button class="btn-dl primary" onclick="downloadTex('resume')">⬇ resume.tex</button>
+        <button class="btn-dl primary" id="btn-dl-resume" onclick="downloadCompiledPDF('resume')">⬇ Resume PDF</button>
+        <button class="btn-dl primary" id="btn-dl-cover" onclick="downloadCompiledPDF('cover')">⬇ Cover letter PDF</button>
+        <button class="btn-dl secondary" onclick="downloadTex('resume')">⬇ resume.tex</button>
+        <button class="btn-dl secondary" onclick="downloadTex('cover')">⬇ cover_letter.tex</button>
         <button class="btn-dl overleaf" onclick="openOverleaf('resume')">▶ Overleaf</button>
         <button class="btn-dl secondary" style="margin-left:auto" onclick="resetApp()">Start over</button>
       </div>
@@ -472,8 +495,6 @@ footer a:hover{color:var(--text)}
 <footer>resumecraft &nbsp;·&nbsp; All API calls go directly from your browser to Anthropic — no server &nbsp;·&nbsp; <a href="https://github.com" target="_blank">GitHub</a></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 if(typeof pdfjsLib!=='undefined'){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
 
@@ -544,7 +565,7 @@ function showError(msg){const el=document.getElementById('error-bar');el.textCon
 function clearError(){document.getElementById('error-bar').classList.remove('show');}
 
 // ── TABS ──
-const ALL_TABS=['resume','cover','blocks','latex-resume','latex-cover','edit-html'];
+const ALL_TABS=['resume','cover','blocks','latex-resume','latex-cover'];
 function switchTab(name){
   ALL_TABS.forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===name));
   document.querySelectorAll('.tab-btn').forEach((btn,i)=>btn.classList.toggle('active',i===ALL_TABS.indexOf(name)));
@@ -975,7 +996,10 @@ ${jd}`;
     document.getElementById('cover-preview').innerHTML=coverHTML;
     document.getElementById('latex-resume-display').textContent=resumeTex;
     document.getElementById('latex-cover-display').textContent=coverTex;
-    document.getElementById('edit-html-ta').value=resumeHTML;
+    // Reset blobs and kick off LaTeX compilation for both documents
+    resumePDFBlob=null; coverPDFBlob=null;
+    compileLatex('resume');
+    compileLatex('cover');
     document.getElementById('match-score').textContent=score+'%';
     setTimeout(()=>{document.getElementById('match-fill').style.width=score+'%';},120);
     if(reasoning){document.getElementById('reasoning-text').textContent=reasoning;document.getElementById('reasoning-card').classList.add('show');}
@@ -1002,8 +1026,137 @@ function resetApp(){
   document.getElementById('btn-gen').disabled=false;
   document.getElementById('match-fill').style.width='0';
   document.getElementById('reasoning-card').classList.remove('show');
+  // Clear compiled PDFs
+  resumePDFBlob=null; coverPDFBlob=null;
+  ['resume','cover'].forEach(t=>{
+    const ifrEl=document.getElementById(t+'-pdf-iframe');
+    if(ifrEl) ifrEl.src='';
+    const pdfW=document.getElementById(t+'-pdf-frame-wrap');
+    const htmlW=document.getElementById(t+'-html-frame-wrap');
+    const errW=document.getElementById(t+'-compile-error');
+    const statW=document.getElementById(t+'-compile-status');
+    if(pdfW) pdfW.style.display='none';
+    if(htmlW) htmlW.style.display='none';
+    if(errW) errW.style.display='none';
+    if(statW) statW.style.display='none';
+  });
   allBlocks=[];clearError();setStep(1);switchTab('resume');
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── LATEX COMPILE via texlive.net ──
+// Stores compiled PDF blobs for download
+let resumePDFBlob = null;
+let coverPDFBlob = null;
+
+async function compileLatex(type) {
+  const tex = type === 'resume' ? resumeTex : coverTex;
+  if (!tex) return;
+
+  const statusEl = document.getElementById(type + '-compile-status');
+  const errorEl  = document.getElementById(type + '-compile-error');
+  const pdfWrap  = document.getElementById(type + '-pdf-frame-wrap');
+  const htmlWrap = document.getElementById(type + '-html-frame-wrap');
+  const iframe   = document.getElementById(type + '-pdf-iframe');
+
+  statusEl.style.display = 'block';
+  errorEl.style.display  = 'none';
+  pdfWrap.style.display  = 'none';
+  htmlWrap.style.display = 'none';
+
+  try {
+    // texlive.net accepts a POST with the .tex source and returns a PDF
+    const formData = new FormData();
+    formData.append('return', 'pdf');
+    formData.append('engine', 'pdflatex');
+    formData.append('file', new Blob([tex], {type:'text/plain'}), 'document.tex');
+
+    const res = await fetch('https://texlive.net/cgi-bin/latexcgi', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!res.ok) throw new Error(`Compile server returned ${res.status}`);
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('pdf')) {
+      // Got back an error log instead of PDF
+      const errText = await res.text();
+      throw new Error('LaTeX compile error:\n' + errText.slice(0, 600));
+    }
+
+    const blob = await res.blob();
+    if (type === 'resume') resumePDFBlob = blob;
+    else coverPDFBlob = blob;
+
+    const url = URL.createObjectURL(blob);
+    iframe.src = url;
+    statusEl.style.display = 'none';
+    pdfWrap.style.display  = 'block';
+
+  } catch (err) {
+    statusEl.style.display = 'none';
+    // Fall back to HTML preview
+    htmlWrap.style.display = 'block';
+    errorEl.style.display  = 'block';
+    errorEl.innerHTML = `<strong>LaTeX compile failed</strong> — showing HTML preview instead.<br><small style="opacity:.7">${err.message.replace(/\n/g,'<br>').slice(0,300)}</small><br><br>You can still download the .tex file and compile it yourself, or use <a href="#" onclick="openOverleaf('${type}');return false" style="color:var(--red)">Overleaf</a>.`;
+    console.error('LaTeX compile error:', err);
+  }
+}
+
+async function downloadCompiledPDF(type) {
+  const blob = type === 'resume' ? resumePDFBlob : coverPDFBlob;
+  const btn  = document.getElementById('btn-dl-' + type);
+
+  if (blob) {
+    // Already compiled — download immediately
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = type === 'resume' ? 'resume.pdf' : 'cover_letter.pdf';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    return;
+  }
+
+  // Need to compile first
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = 'Compiling…'; btn.disabled = true; }
+
+  const tex = type === 'resume' ? resumeTex : coverTex;
+  if (!tex) { alert('No LaTeX content — please generate first.'); if(btn){btn.textContent=orig;btn.disabled=false;} return; }
+
+  try {
+    const formData = new FormData();
+    formData.append('return', 'pdf');
+    formData.append('engine', 'pdflatex');
+    formData.append('file', new Blob([tex], {type:'text/plain'}), 'document.tex');
+
+    const res = await fetch('https://texlive.net/cgi-bin/latexcgi', {
+      method: 'POST',
+      body: formData
+    });
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!res.ok || !contentType.includes('pdf')) {
+      const errText = await res.text().catch(() => '');
+      throw new Error('Compile failed. Try Overleaf instead.\n' + errText.slice(0,200));
+    }
+
+    const dlBlob = await res.blob();
+    if (type === 'resume') resumePDFBlob = dlBlob;
+    else coverPDFBlob = dlBlob;
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(dlBlob);
+    a.download = type === 'resume' ? 'resume.pdf' : 'cover_letter.pdf';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+
+  } catch(err) {
+    alert('PDF download failed: ' + err.message);
+  } finally {
+    if (btn) { btn.textContent = orig; btn.disabled = false; }
+  }
 }
 
 // ── DOWNLOAD .tex ──
@@ -1026,113 +1179,7 @@ function openOverleaf(type){
   form.appendChild(snip);form.appendChild(snip_name);document.body.appendChild(form);form.submit();document.body.removeChild(form);
 }
 
-// ── PDF DOWNLOAD via html2canvas + jsPDF ──
-async function downloadHTMLasPDF(type){
-  const inner = type==='resume' ? resumeHTML : coverHTML;
-  if(!inner){alert('No content to download — please generate first.');return;}
 
-  // Find the button and show loading state
-  const btns = document.querySelectorAll('.btn-dl.primary');
-  const btn = [...btns].find(b=>b.textContent.includes(type==='resume'?'Resume PDF':'Cover letter PDF'));
-  const origText = btn ? btn.textContent : '';
-  if(btn){btn.textContent='Generating…';btn.disabled=true;}
-
-  const resumeCSS=`*{box-sizing:border-box}body{margin:0;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.45;color:#000;background:#fff;padding:0.65in 0.8in;width:8.5in}
-.r-name{font-size:22pt;font-weight:bold;text-align:center;margin-bottom:5px}
-.r-contact{text-align:center;font-size:9.5pt;color:#222;margin-bottom:14px}
-.r-contact a{color:#222;text-decoration:none}
-.r-section{font-size:11pt;font-weight:bold;border-bottom:1px solid #000;margin:12px 0 5px;padding-bottom:1px}
-.r-edu-header{display:flex;justify-content:space-between;align-items:baseline}
-.r-edu-school{font-weight:bold;font-size:11pt}
-.r-edu-date{font-size:10pt;font-style:italic;color:#222}
-.r-edu-degree{font-style:italic;font-size:10.5pt;margin-bottom:1px}
-.r-job-title-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:6px}
-.r-job-title{font-weight:bold;font-size:11pt}
-.r-job-location{font-size:10pt;font-style:italic;color:#222}
-.r-job-company-row{display:flex;justify-content:space-between;align-items:baseline}
-.r-job-company{font-style:italic;font-size:10.5pt}
-.r-job-date{font-size:10pt;font-style:italic;color:#222}
-ul{list-style:none;margin:3px 0 3px 18px;padding:0}
-li{font-size:10.5pt;margin-bottom:2px;position:relative;padding-left:16px}
-li::before{content:'○';position:absolute;left:0;top:0;font-size:9pt;line-height:1.6}
-.r-skills-row{font-size:10.5pt;margin-bottom:3px}
-.r-skills-cat{font-weight:bold}`;
-  const coverCSS=`*{box-sizing:border-box}body{margin:0;font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.65;color:#1a1a1a;background:#fff;padding:1in;width:8.5in}p{margin-bottom:16px}`;
-
-  try{
-    // Build a hidden iframe with exact letter-page width for accurate rendering
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText='position:fixed;left:-9999px;top:0;width:8.5in;height:11in;border:none;visibility:hidden';
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>${type==='resume'?resumeCSS:coverCSS}</style></head><body>${inner}</body></html>`);
-    doc.close();
-
-    // Wait for fonts and layout
-    await new Promise(r=>setTimeout(r,600));
-
-    const bodyEl = doc.body;
-    const canvas = await html2canvas(bodyEl,{
-      scale: 2,           // 2x for crisp text
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      width: bodyEl.scrollWidth,
-      height: bodyEl.scrollHeight,
-      windowWidth: bodyEl.scrollWidth,
-      windowHeight: bodyEl.scrollHeight,
-      logging: false
-    });
-
-    document.body.removeChild(iframe);
-
-    // A4/Letter dimensions in mm: 215.9 x 279.4
-    const {jsPDF} = window.jspdf;
-    const pdf = new jsPDF({orientation:'portrait',unit:'mm',format:'letter'});
-    const pageW = pdf.internal.pageSize.getWidth();   // 215.9mm
-    const pageH = pdf.internal.pageSize.getHeight();  // 279.4mm
-
-    const imgW = canvas.width;
-    const imgH = canvas.height;
-    const ratio = pageW / (imgW / 2); // account for scale:2
-    const scaledH = (imgH / 2) * ratio;
-
-    const imgData = canvas.toDataURL('image/png');
-
-    if(scaledH <= pageH){
-      // Single page
-      pdf.addImage(imgData,'PNG',0,0,pageW,scaledH);
-    } else {
-      // Multi-page: slice canvas into page-height chunks
-      const pageCanvas = document.createElement('canvas');
-      const ctx = pageCanvas.getContext('2d');
-      const pxPerPage = Math.floor((pageH / ratio) * 2); // px at scale:2
-      let offsetY = 0;
-      let pageNum = 0;
-      while(offsetY < imgH){
-        const sliceH = Math.min(pxPerPage, imgH - offsetY);
-        pageCanvas.width = imgW;
-        pageCanvas.height = sliceH;
-        ctx.fillStyle='#fff';ctx.fillRect(0,0,imgW,sliceH);
-        ctx.drawImage(canvas,0,-offsetY);
-        const sliceData = pageCanvas.toDataURL('image/png');
-        if(pageNum>0) pdf.addPage();
-        pdf.addImage(sliceData,'PNG',0,0,pageW,(sliceH/2)*ratio);
-        offsetY+=sliceH;pageNum++;
-      }
-    }
-
-    const filename = type==='resume'?'resume.pdf':'cover_letter.pdf';
-    pdf.save(filename);
-
-  }catch(err){
-    console.error(err);
-    alert('PDF generation failed: '+err.message+'\n\nTry the Overleaf button for a better PDF.');
-  }finally{
-    if(btn){btn.textContent=origText;btn.disabled=false;}
-  }
-}
 </script>
 </body>
 </html>
