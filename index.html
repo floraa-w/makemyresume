@@ -334,12 +334,27 @@ footer a:hover{color:var(--text)}
         <div class="hint">The AI extracts required skills and responsibilities to score and rank your experience.</div>
       </div>
     </div>
-    <div class="bottom-row">
+    <div class="bottom-row" style="grid-template-columns:1fr 1fr 1fr auto">
       <div class="name-field">
         <label for="your-name">Your name</label>
         <input type="text" id="your-name" placeholder="e.g. Flora Wu"/>
       </div>
-      <button class="btn-generate" id="btn-gen" onclick="startGeneration()">Generate <span style="font-size:16px">→</span></button>
+      <div class="name-field">
+        <label for="job-title-input">Job title</label>
+        <input type="text" id="job-title-input" placeholder="e.g. Product Manager"/>
+      </div>
+      <div class="name-field">
+        <label for="company-input">Company</label>
+        <input type="text" id="company-input" placeholder="e.g. Apple"/>
+      </div>
+      <div class="name-field" style="min-width:120px">
+        <label for="page-count">Resume pages</label>
+        <select id="page-count" style="font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 13px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--text);cursor:pointer">
+          <option value="1" selected>1 page</option>
+          <option value="2">2 pages</option>
+        </select>
+      </div>
+      <button class="btn-generate" id="btn-gen" onclick="startGeneration()" style="align-self:flex-end">Generate <span style="font-size:16px">→</span></button>
     </div>
     <div class="status-bar" id="status-bar">
       <div class="spinner"></div>
@@ -728,10 +743,16 @@ function renderAnalysis(data){
 // ── MAIN GENERATION ──
 async function startGeneration(){
   const key=getKey();if(!key){openModal();return;}
-  const cvText = document.getElementById('cv-text').value.trim();
-  const cvPdf  = window._cvPdfBase64 || null;
-  const jd     = document.getElementById('jd-text').value.trim();
-  const name   = document.getElementById('your-name').value.trim() || 'Your Name';
+  const cvText    = document.getElementById('cv-text').value.trim();
+  const cvPdf     = window._cvPdfBase64 || null;
+  const jd        = document.getElementById('jd-text').value.trim();
+  const name      = document.getElementById('your-name').value.trim() || 'Your Name';
+  const jobTitle  = document.getElementById('job-title-input').value.trim();
+  const company   = document.getElementById('company-input').value.trim();
+  const pageCount = parseInt(document.getElementById('page-count').value) || 1;
+  // Store globally so openOverleafAndCompile can use them for the filename
+  window._jobTitle = jobTitle;
+  window._company  = company;
   if (!cvText && !cvPdf) { showError('Please upload a CV PDF or paste your CV text.'); return; }
   if (!jd) { showError('Please paste the job description.'); return; }
   clearError();
@@ -755,42 +776,34 @@ CRITICAL: Pick TOP 3–4 by score — NOT just most recent.
 ═══════════════════════
 STEP 3 — WRITE RESUME + COVER LETTER
 ═══════════════════════
-PAGE BUDGET — the compiled LaTeX must fit on exactly ONE page. Here is the precise line budget for 10pt font with 1cm margins on letter paper:
-  • Header (name + contact): 3 lines
-  • Each section heading + rule: 1.5 lines
-  • Education entry (school/degree/date): 2 lines
-  • Each education bullet (coursework/awards): 1.5 lines each
-  • Each experience role header (title/company/date): 2 lines
-  • Each experience bullet at 15–18 words: 1.5 lines each
-  • Each skills category line: 1.5 lines each
-  • Spacing between roles: 0.5 lines each
-  • TOTAL PAGE CAPACITY: ~52 lines
+${pageCount === 1 ? `PAGE BUDGET — must fit on EXACTLY ONE PAGE. 10pt font, 1cm margins, letter paper. Capacity: ~52 lines.
 
-CONCRETE TARGETS for a full page:
-  • 3 experience roles × (2 header + 3 bullets × 1.5) = 3 × 6.5 = ~19.5 lines
-  • 4 experience roles × 6.5 = ~26 lines
-  • Education: 2 + 2 bullets × 1.5 = ~5 lines
-  • Skills: 1.5 heading + 4 categories × 1.5 = ~7.5 lines
-  • Key Projects: 1.5 heading + 2 lines header + 2 bullets × 1.5 = ~6.5 lines
+LINE COSTS (memorise these):
   • Header: 3 lines
-  • Section headings (4 sections × 1.5): ~6 lines
-  → 3 roles + projects + skills + edu + header + headings = ~53 lines ✓ FITS
-  → 4 roles + skills + edu + header + headings (no projects) = ~56 lines ✓ FITS
-  → 5 roles (no projects) = ~63 lines ✗ TOO LONG — use 4 max
+  • Section heading: 1.5 lines each (you will have 4 sections = 6 lines)
+  • Education entry + 2 bullets: 5 lines
+  • Each experience role (header + 2 bullets @ 15–18 words): 5 lines
+  • Key Projects (heading + 1 project + 2 bullets): 6 lines
+  • Skills (heading + 4 categories): 7 lines
+  • Fixed overhead (header + edu + skills + 4 headings): 3+5+7+6 = 21 lines
+  • Remaining for experience + projects: 52 - 21 = 31 lines
 
-BULLET RULES — strictly follow these or the resume will overflow:
-  • Write EXACTLY 2 bullets per role — NOT 3. Two bullets per role is the correct density.
-  • Each bullet must be 15–18 words maximum. Count the words. If over 18 words, cut.
-  • Start with a strong past-tense action verb
-  • Use the JD's exact language and keywords where truthful
-  • Include quantified results (%, numbers, time saved) from the CV wherever available
-  • Never invent facts not in the CV
+FILL STRATEGY — pick the option that gets closest to 52 lines total:
+  Option A: 4 roles (4×5=20) + projects (6) = 26 exp lines → total 47 → ADD 1 more role → 5 roles = 52 ✓
+  Option B: 4 roles (20) + no projects = 20 exp lines → total 41 → TOO SHORT, add projects or 5th role
+  Option C: 5 roles (25) + projects (6) = 31 exp lines → total 52 ✓ PERFECT
+  → AIM FOR 5 roles with 2 bullets each + Key Projects, OR 4 roles with 3 bullets each
 
-OTHER RULES:
-  • Education: include Coursework bullet; include Awards only if space allows
-  • Skills: 3–4 categories, each with 5–7 items on one line
-  • Key Projects: include 1 project with 2 bullets if you have 3 or fewer experience roles
-  • With 4 experience roles: skip Key Projects entirely
+BULLET RULES:
+  • 2–3 bullets per role depending on how many roles fit (see above)
+  • Each bullet EXACTLY 15–18 words. Count them. Rewrite if under 15 or over 18.
+  • Strong past-tense action verb, JD keywords, quantified results from CV only
+  • Never invent facts
+
+FINAL CHECK: Count (roles × 5) + 6 projects + 21 overhead. Must equal 50–54. Adjust if not.` 
+: `PAGE BUDGET — target TWO FULL PAGES. 10pt font, 1cm margins. Capacity: ~104 lines total.
+
+Include ALL relevant experience roles (5–7 roles), 3 bullets each, full education section with all relevant coursework and awards, Key Projects (2–3 projects with 2–3 bullets each), full Skills section with 5–6 categories. The resume should be dense and comprehensive across both pages. Do not cut content — include everything relevant from the CV.`}
 
 ═══════════════════════
 STEP 4 — GAP ANALYSIS
@@ -876,7 +889,7 @@ CRITICAL RULES BEFORE YOU START:
 5. Do NOT add \\input{glyphtounicode} or \\pdfgentounicode
 
 \\documentclass[10pt, letterpaper]{article}
-\\usepackage[ignoreheadfoot,top=1cm,bottom=1cm,left=1cm,right=1cm,footskip=0.5cm]{geometry}
+\\usepackage[ignoreheadfoot,top=1cm,bottom=1cm,left=1cm,right=1cm,footskip=0.5cm]{geometry} % margins set for ${pageCount}-page resume
 \\usepackage{titlesec}
 \\usepackage{tabularx}
 \\usepackage{array}
@@ -1015,14 +1028,11 @@ CRITICAL RULES BEFORE YOU START:
 
 \\end{document}
 
-FINAL PAGE CHECK — before writing the JSON, count words in every bullet. Each bullet must be 15–18 words. If any bullet exceeds 18 words, trim it now. Then count:
-  (roles × 6.5) + 5 edu + 7.5 skills + 3 header + 6 section-headings = total lines
-- Under 45 lines → add Key Projects section (saves ~6.5 lines of blank space)
-- Under 40 lines → add another experience role
-- Over 55 lines → drop Key Projects first, then trim bullets to 15 words, then drop lowest role
-Target: 46–54 lines. The page should look full with no large blank gap at the bottom.
+${pageCount === 1 ? `FINAL CHECK (1-page mode): Count (number_of_roles × 5) + 6 (if projects included) + 21 (overhead). Result must be 50–54. If under 50: add a role or add Key Projects. If over 54: remove a role or drop Key Projects. The page must look completely full with text near the bottom margin.` : `FINAL CHECK (2-page mode): Ensure content fills both pages. Include all roles, full education, multiple projects, comprehensive skills.`}
 
 CANDIDATE NAME: ${name}
+TARGET ROLE: ${jobTitle || '(see job description)'} at ${company || '(see job description)'}
+RESUME LENGTH: ${pageCount} page${pageCount > 1 ? 's' : ''}
 ${cvPdf ? 'FULL CV: The complete CV is provided above as a PDF document — read it carefully and use ALL experiences, projects, education, and skills from it.' : `FULL CV:\n${cvText}`}
 JOB DESCRIPTION:
 ${jd}`;
@@ -1114,7 +1124,10 @@ function openOverleafAndCompile(type) {
   snip.type = 'hidden'; snip.name = 'snip'; snip.value = tex;
   const snip_name = document.createElement('input');
   snip_name.type = 'hidden'; snip_name.name = 'snip_name';
-  snip_name.value = type === 'resume' ? 'resume.tex' : 'cover_letter.tex';
+  const jt = (window._jobTitle || '').replace(/[^a-zA-Z0-9 _-]/g,'').trim();
+  const co = (window._company  || '').replace(/[^a-zA-Z0-9 _-]/g,'').trim();
+  const baseName = (co && jt) ? co + ' - ' + jt : (co || jt || 'resume');
+  snip_name.value = type === 'resume' ? baseName + '.tex' : baseName + ' cover letter.tex';
   form.appendChild(snip); form.appendChild(snip_name);
   document.body.appendChild(form); form.submit();
   document.body.removeChild(form);
@@ -1141,7 +1154,10 @@ function compileLatex(type) {
 // ── DOWNLOAD .tex ──
 function downloadTex(type){
   const content=type==='resume'?resumeTex:coverTex;
-  const filename=type==='resume'?'resume.tex':'cover_letter.tex';
+  const jt2 = (window._jobTitle || '').replace(/[^a-zA-Z0-9 _-]/g,'').trim();
+  const co2 = (window._company  || '').replace(/[^a-zA-Z0-9 _-]/g,'').trim();
+  const base2 = (co2 && jt2) ? co2 + ' - ' + jt2 : (co2 || jt2 || 'resume');
+  const filename = type==='resume' ? base2+'.tex' : base2+' cover letter.tex';
   if(!content){alert('No LaTeX content — please generate first.');return;}
   const blob=new Blob([content],{type:'text/plain'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;a.click();
