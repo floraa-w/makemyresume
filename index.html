@@ -482,9 +482,7 @@ footer a:hover{color:var(--text)}
 
 <footer>resumecraft &nbsp;·&nbsp; All API calls go directly from your browser to Anthropic — no server &nbsp;·&nbsp; <a href="https://github.com" target="_blank">GitHub</a></footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-if(typeof pdfjsLib!=='undefined'){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
 
 // ── STATE ──
 let resumeHTML='',coverHTML='',resumeTex='',coverTex='';
@@ -507,31 +505,40 @@ function handleDragOver(e){e.preventDefault();document.getElementById('upload-zo
 function handleDragLeave(){document.getElementById('upload-zone').classList.remove('drag');}
 function handleDrop(e){e.preventDefault();document.getElementById('upload-zone').classList.remove('drag');const f=e.dataTransfer.files[0];if(f&&f.type==='application/pdf')processPDF(f);else showError('Please drop a PDF file.');}
 function handleFileSelect(e){const f=e.target.files[0];if(f)processPDF(f);}
-async function processPDF(file){
-  document.getElementById('file-name-label').textContent=file.name;
+async function processPDF(file) {
+  document.getElementById('file-name-label').textContent = file.name;
   document.getElementById('upload-success').classList.add('show');
-  document.getElementById('upload-zone').style.display='none';
-  const ta=document.getElementById('cv-text');
-  ta.value='Extracting text from PDF…';ta.disabled=true;
-  try{
-    const buf=await file.arrayBuffer();
-    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-    let text='';
-    for(let i=1;i<=pdf.numPages;i++){
-      const page=await pdf.getPage(i);const content=await page.getTextContent();
-      let lastY=null;
-      for(const item of content.items){if(lastY!==null&&Math.abs(item.transform[5]-lastY)>5)text+='\n';text+=item.str;lastY=item.transform[5];}
-      text+='\n\n';
-    }
-    ta.value=text.trim();ta.disabled=false;
-  }catch(err){ta.value='';ta.disabled=false;showError('Could not read PDF: '+err.message);removePDF();}
+  document.getElementById('upload-zone').style.display = 'none';
+  const ta = document.getElementById('cv-text');
+  ta.value = 'Reading PDF…'; ta.disabled = true;
+  try {
+    // Read PDF as base64 — will be sent directly to Claude API which reads PDFs natively
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = () => reject(new Error('Could not read file'));
+      reader.readAsDataURL(file);
+    });
+    // Store the base64 PDF so we can send it to the API
+    window._cvPdfBase64 = base64;
+    window._cvPdfName = file.name;
+    ta.value = '(PDF loaded: ' + file.name + ' — will be read directly by AI)';
+    ta.disabled = false;
+  } catch(err) {
+    ta.value = ''; ta.disabled = false;
+    showError('Could not read PDF: ' + err.message + '. Try pasting your CV as text instead.');
+    removePDF();
+  }
 }
-function removePDF(){
+function removePDF() {
   document.getElementById('upload-success').classList.remove('show');
-  document.getElementById('upload-zone').style.display='';
-  document.getElementById('pdf-file-input').value='';
-  const ta=document.getElementById('cv-text');ta.disabled=false;
-  if(ta.value.startsWith('Extracting'))ta.value='';
+  document.getElementById('upload-zone').style.display = '';
+  document.getElementById('pdf-file-input').value = '';
+  const ta = document.getElementById('cv-text');
+  ta.disabled = false;
+  if (ta.value.startsWith('(PDF loaded') || ta.value.startsWith('Reading')) ta.value = '';
+  window._cvPdfBase64 = null;
+  window._cvPdfName = null;
 }
 
 // ── STEPS ──
@@ -746,18 +753,28 @@ CRITICAL: Pick TOP 3–4 by score — NOT just most recent.
 ═══════════════════════
 STEP 3 — WRITE RESUME + COVER LETTER
 ═══════════════════════
-- Education ALWAYS first, before Experience
-- 2–3 bullets per role. For EACH bullet follow these rules strictly:
-    • Start with a strong past-tense action verb
-    • Use the JD's exact language and keywords where truthful
-    • Include quantified results (numbers, %, $, time saved) from the CV wherever available
-    • AIM for bullets that fill roughly 1 to 1.5 lines when typeset — not a short stub, not a 3-line wrap
-    • If a bullet is very short (under ~60 chars), either merge it with adjacent content or expand it with context from the CV
-    • If a bullet would wrap past 2 lines, split or trim it
-    • Vary sentence length — not all bullets should be the same length
-    • Never invent facts not in the CV
-- Skills: JD-relevant categories first, cut irrelevant ones entirely
-- TARGET: fill 90–100% of one printed page — not more, not much less. The LaTeX template is 10pt font, 2cm margins, letter paper. A good resume should feel dense and complete, not sparse. Aim for 3–4 roles with 2–3 bullets each. Include Key Projects if space allows. Only cut content if it genuinely overflows past one page.
+PAGE BUDGET — this is the most important constraint. The compiled LaTeX must fill almost exactly ONE page. Use this concrete budget:
+  • Header (name + contact): ~3 lines
+  • Education section heading + entry + 1-2 bullets: ~5 lines
+  • Each Experience role (title/company/date + 3 bullets): ~6 lines
+  • Key Projects section (heading + 1 project + 2 bullets): ~5 lines
+  • Skills section (heading + 4 categories): ~6 lines
+  • Total budget: ~50 lines. With 4 roles that's 3+5+24+5+6 = 43 lines — ADD a 5th role or expand bullets to 3 each.
+  • With 3 roles: 3+5+18+5+6 = 37 lines — you MUST add Key Projects AND expand bullets to 3 each AND add more education detail.
+
+BULLET RULES:
+  • Write 3 bullets per role whenever the page allows (and it usually does)
+  • Each bullet should be 15–25 words — enough to wrap to ~1.5 lines in LaTeX
+  • Start with a strong past-tense action verb
+  • Use the JD's exact language and keywords where truthful
+  • Include quantified results (numbers, %, time saved) from the CV wherever available
+  • Never invent facts not in the CV
+
+OTHER RULES:
+  • Education: include both Coursework AND Awards bullets — don't trim unless truly over budget
+  • Skills: 4 categories minimum, each with 5–8 items
+  • Key Projects: always include if you have fewer than 4 experience roles
+  • If still under budget after all the above: add a 4th or 5th experience role from the CV
 
 ═══════════════════════
 STEP 4 — GAP ANALYSIS
@@ -951,7 +968,7 @@ CRITICAL RULES BEFORE YOU START:
 
 % repeat the above twocolentry+highlights block for each additional role, separated by \\vspace{0.2 cm}
 
-% KEY PROJECTS — include ONLY if space remains on one page; omit entirely if tight
+% KEY PROJECTS — include this section unless you have 4+ experience roles already filling the page
 \\section{Key Projects}
 
 \\begin{twocolentry}{
@@ -982,7 +999,12 @@ CRITICAL RULES BEFORE YOU START:
 
 \\end{document}
 
-PAGE LENGTH: A letter page at 10pt with these margins fits approximately 52–55 lines of body text. TARGET 90–100% of the page — the resume should look full and professional. Include 3–4 roles, 2–3 bullets each, plus education with relevant coursework/awards, Key Projects if relevant, and a skills section with 3–4 categories. Only cut content if you genuinely exceed ~55 lines: first trim the longest bullets, then remove Key Projects, then drop the lowest-scoring role.
+FINAL PAGE CHECK — before generating the JSON, mentally lay out your resume:
+Count roles × 6 lines each, + 5 for education, + 5 for projects, + 6 for skills, + 3 for header = total.
+- If total < 42 lines: ADD more content (another role, expand bullets to 3, add more skills/coursework)
+- If total 42–52 lines: GOOD — this is the target zone
+- If total > 55 lines: TRIM (shorten bullets, remove awards bullet, remove Key Projects, drop lowest role)
+The goal is a resume that looks FULL — dense text all the way to near the bottom of page 1, with no large blank space at the end.
 
 CANDIDATE NAME: ${name}
 FULL CV:
