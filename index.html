@@ -264,6 +264,32 @@ pre.latex-code{background:#18181a;color:#d4d0c8;border-radius:var(--r);padding:1
 
 
 
+.bullet-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.bullet-card-header{padding:.85rem 1rem;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.bullet-role-label{font-size:12px;font-weight:500;color:var(--text);flex:1}
+.bullet-role-meta{font-size:11px;color:var(--text-3)}
+.bullet-row{padding:.85rem 1rem;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:start}
+.bullet-row:last-child{border-bottom:none}
+.bullet-original{font-size:12.5px;color:var(--text-2);line-height:1.5;font-style:italic;margin-bottom:.5rem}
+.bullet-original::before{content:"Current: ";font-weight:500;color:var(--text-3);font-style:normal}
+.bullet-suggested{font-size:13px;color:var(--text);line-height:1.5;margin-bottom:.6rem}
+.bullet-suggested::before{content:"Suggested: ";font-weight:500;color:var(--green-mid)}
+.bullet-edit-ta{width:100%;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.5;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--text);resize:vertical;min-height:60px;display:none;margin-bottom:.6rem}
+.bullet-edit-ta.visible{display:block}
+.bullet-actions{display:flex;gap:6px;flex-wrap:wrap}
+.ba{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:5px 12px;border-radius:6px;cursor:pointer;border:1px solid;transition:all .15s}
+.ba-approve{background:var(--green-light);color:var(--green);border-color:var(--green-pale)}
+.ba-approve:hover{background:var(--green-pale)}
+.ba-skip{background:var(--surface2);color:var(--text-2);border-color:var(--border)}
+.ba-skip:hover{border-color:var(--border-mid);color:var(--text)}
+.ba-edit{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-pale)}
+.ba-edit:hover{background:var(--amber-pale)}
+.ba-replace{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-pale)}
+.ba-replace:hover{background:var(--blue-pale)}
+.bullet-status{font-size:11px;padding:3px 8px;border-radius:100px;font-weight:500;margin-left:auto;align-self:center}
+.bs-approved{background:var(--green-light);color:var(--green)}
+.bs-skipped{background:var(--surface2);color:var(--text-3)}
+.bs-pending{background:var(--amber-bg);color:var(--amber)}
 footer{text-align:center;padding:2rem;font-size:12px;color:var(--text-3);border-top:1px solid var(--border)}
 footer a{color:var(--text-2);text-decoration:none}
 footer a:hover{color:var(--text)}
@@ -334,25 +360,21 @@ footer a:hover{color:var(--text)}
         <div class="hint">The AI extracts required skills and responsibilities to score and rank your experience.</div>
       </div>
     </div>
-    <div class="bottom-row" style="grid-template-columns:1fr 1fr 1fr auto">
+    <div class="bottom-row" style="grid-template-columns:1fr auto auto auto">
       <div class="name-field">
         <label for="your-name">Your name</label>
         <input type="text" id="your-name" placeholder="e.g. Flora Wu"/>
       </div>
-      <div class="name-field">
-        <label for="job-title-input">Job title</label>
-        <input type="text" id="job-title-input" placeholder="e.g. Product Manager"/>
+      <div class="name-field" style="min-width:80px;max-width:110px">
+        <label for="page-count">Pages</label>
+        <input type="number" id="page-count" value="1" min="1" max="5" step="1" style="font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 13px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--text);width:100%"/>
       </div>
-      <div class="name-field">
-        <label for="company-input">Company</label>
-        <input type="text" id="company-input" placeholder="e.g. Apple"/>
-      </div>
-      <div class="name-field" style="min-width:120px">
-        <label for="page-count">Resume pages</label>
-        <select id="page-count" style="font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 13px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--text);cursor:pointer">
-          <option value="1" selected>1 page</option>
-          <option value="2">2 pages</option>
-        </select>
+      <div class="name-field" id="job-override-wrap" style="display:none;min-width:280px">
+        <label style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:var(--text-2)">Job title &amp; company <span style="color:var(--amber);font-size:10px">(couldn't auto-detect)</span></label>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="job-title-input" placeholder="Job title" style="flex:1;font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--text)"/>
+          <input type="text" id="company-input" placeholder="Company" style="flex:1;font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--text)"/>
+        </div>
       </div>
       <button class="btn-generate" id="btn-gen" onclick="startGeneration()" style="align-self:flex-end">Generate <span style="font-size:16px">→</span></button>
     </div>
@@ -389,6 +411,7 @@ footer a:hover{color:var(--text)}
         <button class="tab-btn active" onclick="switchTab('resume')">📄 Resume preview</button>
         <button class="tab-btn" onclick="switchTab('cover')">✉️ Cover letter</button>
         <button class="tab-btn" onclick="switchTab('blocks')">⠿ Edit blocks</button>
+        <button class="tab-btn" onclick="switchTab('bullets')">✏️ Bullet suggestions</button>
         <button class="tab-btn" onclick="switchTab('latex-resume')">{ } Resume LaTeX</button>
         <button class="tab-btn" onclick="switchTab('latex-cover')">{ } Cover letter LaTeX</button>
       </div>
@@ -431,6 +454,22 @@ footer a:hover{color:var(--text)}
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- BULLET SUGGESTIONS -->
+      <div class="tab-panel" id="tab-bullets">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1.25rem">
+          <div>
+            <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:3px">Bullet point suggestions</div>
+            <div style="font-size:13px;color:var(--text-2)">AI rewrites of each bullet to better match the job description. Approve, skip, edit, or replace.</div>
+          </div>
+          <button class="btn-dl primary" id="btn-get-suggestions" onclick="generateBulletSuggestions()">✨ Generate suggestions</button>
+        </div>
+        <div id="bullet-suggestions-loading" style="display:none;text-align:center;padding:2rem;color:var(--text-2);font-size:13px">
+          <div class="spinner" style="margin:0 auto 1rem"></div>
+          Analysing bullets against job description…
+        </div>
+        <div id="bullet-suggestions-list" style="display:flex;flex-direction:column;gap:1rem"></div>
       </div>
 
       <div class="tab-panel" id="tab-latex-resume">
@@ -576,7 +615,7 @@ function showError(msg){const el=document.getElementById('error-bar');el.textCon
 function clearError(){document.getElementById('error-bar').classList.remove('show');}
 
 // ── TABS ──
-const ALL_TABS=['resume','cover','blocks','latex-resume','latex-cover'];
+const ALL_TABS=['resume','cover','blocks','bullets','latex-resume','latex-cover'];
 function switchTab(name){
   ALL_TABS.forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===name));
   document.querySelectorAll('.tab-btn').forEach((btn,i)=>btn.classList.toggle('active',i===ALL_TABS.indexOf(name)));
@@ -747,12 +786,10 @@ async function startGeneration(){
   const cvPdf     = window._cvPdfBase64 || null;
   const jd        = document.getElementById('jd-text').value.trim();
   const name      = document.getElementById('your-name').value.trim() || 'Your Name';
-  const jobTitle  = document.getElementById('job-title-input').value.trim();
-  const company   = document.getElementById('company-input').value.trim();
-  const pageCount = parseInt(document.getElementById('page-count').value) || 1;
-  // Store globally so openOverleafAndCompile can use them for the filename
-  window._jobTitle = jobTitle;
-  window._company  = company;
+  const pageCount = Math.max(1, Math.min(10, parseInt(document.getElementById('page-count').value) || 1));
+  // Job title/company: use manual override if provided, otherwise AI will extract
+  const manualJobTitle = document.getElementById('job-title-input').value.trim();
+  const manualCompany  = document.getElementById('company-input').value.trim();
   if (!cvText && !cvPdf) { showError('Please upload a CV PDF or paste your CV text.'); return; }
   if (!jd) { showError('Please paste the job description.'); return; }
   clearError();
@@ -822,6 +859,8 @@ OUTPUT — Return ONLY valid raw JSON, no markdown, no text outside the JSON.
 {
   "match_score": <0-100>,
   "selection_reasoning": "<2-3 sentences: which roles scored highest and why>",
+  "extracted_job_title": "<job title extracted from JD, or empty string if unclear>",
+  "extracted_company": "<company name extracted from JD, or empty string if unclear>",
 
   "resume_html": "<complete inner HTML — EXACTLY these classes: r-name, r-contact (with mailto/tel/https links), r-section, r-edu-header, r-edu-school, r-edu-date, r-edu-degree, r-job-title-row, r-job-title, r-job-location, r-job-company-row, r-job-company, r-job-date, ul>li, r-skills-row, r-skills-cat>",
 
@@ -864,6 +903,7 @@ OUTPUT — Return ONLY valid raw JSON, no markdown, no text outside the JSON.
 }
 
 IMPORTANT FOR experience_blocks: Include ALL work experiences AND ALL projects/key projects from the CV as separate draggable blocks. Use kind="job" for work roles and kind="project" for projects/capstone/research projects. Score ALL of them 0-10. Set included=true only for those chosen for the resume. This is the full pool the user drags in and out.
+For multi-page resumes (pageCount > 1): sort experience_blocks with included=true items ordered most-relevant-first (highest score first), then included=false items also ordered by score descending. This ranking determines the visual order in the resume.
 
 HTML TEMPLATE:
 <div class="r-name">${name}</div>
@@ -1031,7 +1071,7 @@ CRITICAL RULES BEFORE YOU START:
 ${pageCount === 1 ? `FINAL CHECK (1-page mode): Count (number_of_roles × 5) + 6 (if projects included) + 21 (overhead). Result must be 50–54. If under 50: add a role or add Key Projects. If over 54: remove a role or drop Key Projects. The page must look completely full with text near the bottom margin.` : `FINAL CHECK (2-page mode): Ensure content fills both pages. Include all roles, full education, multiple projects, comprehensive skills.`}
 
 CANDIDATE NAME: ${name}
-TARGET ROLE: ${jobTitle || '(see job description)'} at ${company || '(see job description)'}
+TARGET ROLE: ${manualJobTitle || '(extract from job description)'} at ${manualCompany || '(extract from job description)'}
 RESUME LENGTH: ${pageCount} page${pageCount > 1 ? 's' : ''}
 ${cvPdf ? 'FULL CV: The complete CV is provided above as a PDF document — read it carefully and use ALL experiences, projects, education, and skills from it.' : `FULL CV:\n${cvText}`}
 JOB DESCRIPTION:
@@ -1066,6 +1106,18 @@ ${jd}`;
     resumeTex=parsed.resume_tex||'';
     coverTex=parsed.cover_tex||'';
     allBlocks=(parsed.experience_blocks||[]);
+    // Use extracted job info, falling back to manual overrides
+    const extractedTitle   = parsed.extracted_job_title || '';
+    const extractedCompany = parsed.extracted_company   || '';
+    window._jobTitle = manualJobTitle || extractedTitle;
+    window._company  = manualCompany  || extractedCompany;
+    window._jd       = jd;
+    window._allBulletsData = null; // reset bullet suggestions
+    // Show job override in input section if extraction failed (for next run)
+    const overrideWrap = document.getElementById('job-override-wrap');
+    if (overrideWrap) {
+      overrideWrap.style.display = (!window._jobTitle || !window._company) ? 'block' : 'none';
+    }
     const score=Math.max(0,Math.min(100,parsed.match_score||0));
     const reasoning=parsed.selection_reasoning||'';
 
@@ -1106,6 +1158,178 @@ function resetApp(){
   resumePDFBlob=null; coverPDFBlob=null;
   allBlocks=[];clearError();setStep(1);switchTab('resume');
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── AUTO-DETECT JOB TITLE/COMPANY from JD text ──
+function tryAutoDetectJobInfo() {
+  const jd = document.getElementById('jd-text').value;
+  if (!jd || jd.length < 30) return;
+  // Quick heuristic: look for "at Company" or "Company is looking" patterns
+  const companyPatterns = [
+    /(?:join|at|with)\s+([A-Z][A-Za-z0-9&\s]{2,30}?)(?:\s+as|\s+to|\.|,)/,
+    /^([A-Z][A-Za-z0-9&\s]{2,30}?)\s+is\s+(?:looking|seeking|hiring)/m,
+    /About\s+([A-Z][A-Za-z0-9&\s]{2,30?})\n/,
+  ];
+  const titlePatterns = [
+    /(?:role|position|title)[:\s]+([A-Z][A-Za-z\s&\/\-]{3,40}?)(?:\n|,|\.|–)/i,
+    /^([A-Z][A-Za-z\s&\/\-]{3,40}?)\n(?:About|We are|Join)/m,
+    /hiring\s+(?:a\s+|an\s+)?([A-Z][A-Za-z\s&\/\-]{3,40}?)(?:\n|,|\.|–)/i,
+  ];
+  let detectedTitle = '', detectedCompany = '';
+  for (const p of titlePatterns) { const m = jd.match(p); if (m) { detectedTitle = m[1].trim(); break; } }
+  for (const p of companyPatterns) { const m = jd.match(p); if (m) { detectedCompany = m[1].trim(); break; } }
+  return { title: detectedTitle, company: detectedCompany };
+}
+
+// Show override fields if JD is pasted and we can't detect
+document.addEventListener('DOMContentLoaded', () => {
+  const jdEl = document.getElementById('jd-text');
+  if (jdEl) jdEl.addEventListener('blur', () => {
+    const info = tryAutoDetectJobInfo();
+    const wrap = document.getElementById('job-override-wrap');
+    // We always show it so user can correct if needed — but collapsed by default
+    // Override fields are hidden; they show after generation if extraction failed
+  });
+});
+
+// ── BULLET SUGGESTIONS ──
+async function generateBulletSuggestions() {
+  const key = getKey();
+  if (!key) { openModal(); return; }
+  if (!resumeHTML) { alert('Generate a resume first.'); return; }
+
+  const btn = document.getElementById('btn-get-suggestions');
+  const loading = document.getElementById('bullet-suggestions-loading');
+  const list = document.getElementById('bullet-suggestions-list');
+
+  btn.disabled = true; btn.textContent = 'Generating…';
+  loading.style.display = 'block'; list.innerHTML = '';
+
+  // Extract bullets from the current resume blocks
+  const blocks = allBlocks.filter(b => b.included);
+  if (blocks.length === 0) { loading.style.display='none'; btn.disabled=false; btn.textContent='✨ Generate suggestions'; alert('No blocks on resume yet.'); return; }
+
+  const blockSummary = blocks.map(b =>
+    `${b.kind==='project'?'Project':'Role'}: ${b.title} at ${b.company||'—'} (${b.date})\nBullets:\n${(b.bullets||[]).map((bl,i)=>`  ${i}: ${bl}`).join('\n')}`
+  ).join('\n\n');
+
+  const jd = window._jd || document.getElementById('jd-text').value;
+
+  const prompt = `You are an expert resume writer. For each bullet point below, suggest an improved rewrite that better matches the job description. Be specific — use the JD's exact keywords, emphasize measurable impact, and keep to 15–18 words.
+
+Return ONLY valid raw JSON, no markdown:
+{
+  "suggestions": [
+    {
+      "block_id": "block_0",
+      "bullet_index": 0,
+      "original": "original bullet text",
+      "suggested": "improved rewrite matching JD keywords and impact",
+      "reason": "one sentence explaining what was improved and why it better matches the JD"
+    }
+  ]
+}
+
+JOB DESCRIPTION:
+${jd}
+
+CURRENT RESUME BULLETS:
+${blockSummary}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 3000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    let text = (data.content||[]).map(b=>b.text||'').join('').replace(/^```json\s*/i,'').replace(/\s*```$/,'').trim();
+    const parsed = JSON.parse(text);
+    window._allBulletsData = parsed.suggestions || [];
+    renderBulletSuggestions(window._allBulletsData);
+  } catch(e) {
+    list.innerHTML = `<div style="padding:1rem;color:var(--red);font-size:13px">Error: ${e.message}</div>`;
+  } finally {
+    loading.style.display = 'none'; btn.disabled = false; btn.textContent = '✨ Generate suggestions';
+  }
+}
+
+function renderBulletSuggestions(suggestions) {
+  const list = document.getElementById('bullet-suggestions-list');
+  list.innerHTML = '';
+  if (!suggestions || suggestions.length === 0) {
+    list.innerHTML = '<div style="padding:1rem;color:var(--text-2);font-size:13px">No suggestions generated.</div>';
+    return;
+  }
+  // Group by block
+  const byBlock = {};
+  suggestions.forEach(s => {
+    if (!byBlock[s.block_id]) byBlock[s.block_id] = [];
+    byBlock[s.block_id].push(s);
+  });
+  Object.entries(byBlock).forEach(([blockId, items]) => {
+    const block = allBlocks.find(b => b.id === blockId);
+    if (!block) return;
+    const card = document.createElement('div');
+    card.className = 'bullet-card';
+    const header = document.createElement('div');
+    header.className = 'bullet-card-header';
+    header.innerHTML = `<span class="bullet-role-label">${esc(block.title)}</span><span class="bullet-role-meta">${esc(block.company||'')} ${esc(block.date||'')}</span>`;
+    card.appendChild(header);
+    items.forEach((s, rowIdx) => {
+      const row = document.createElement('div');
+      row.className = 'bullet-row';
+      row.id = `brow-${blockId}-${s.bullet_index}`;
+      row.innerHTML = `
+        <div>
+          <div class="bullet-original">${esc(s.original)}</div>
+          <div class="bullet-suggested" id="bsugg-${blockId}-${s.bullet_index}">${esc(s.suggested)}</div>
+          <div style="font-size:11.5px;color:var(--text-3);margin-bottom:.6rem;line-height:1.5"><em>${esc(s.reason)}</em></div>
+          <textarea class="bullet-edit-ta" id="bedit-${blockId}-${s.bullet_index}" placeholder="Edit the suggestion…">${esc(s.suggested)}</textarea>
+          <div class="bullet-actions">
+            <button class="ba ba-approve" onclick="bulletAction('approve','${blockId}',${s.bullet_index})">✓ Approve</button>
+            <button class="ba ba-edit" onclick="bulletAction('edit','${blockId}',${s.bullet_index})">✎ Edit</button>
+            <button class="ba ba-replace" onclick="bulletAction('save-edit','${blockId}',${s.bullet_index})" style="display:none" id="bsave-${blockId}-${s.bullet_index}">↑ Apply edit</button>
+            <button class="ba ba-skip" onclick="bulletAction('skip','${blockId}',${s.bullet_index})">✕ Skip</button>
+          </div>
+        </div>
+        <div><span class="bullet-status bs-pending" id="bstatus-${blockId}-${s.bullet_index}">Pending</span></div>`;
+      card.appendChild(row);
+    });
+    list.appendChild(card);
+  });
+}
+
+function bulletAction(action, blockId, bulletIdx) {
+  const block = allBlocks.find(b => b.id === blockId);
+  if (!block) return;
+  const statusEl = document.getElementById(`bstatus-${blockId}-${bulletIdx}`);
+  const editTa   = document.getElementById(`bedit-${blockId}-${bulletIdx}`);
+  const saveBtn  = document.getElementById(`bsave-${blockId}-${bulletIdx}`);
+  const suggEl   = document.getElementById(`bsugg-${blockId}-${bulletIdx}`);
+  const suggestion = window._allBulletsData?.find(s => s.block_id === blockId && s.bullet_index === bulletIdx);
+
+  if (action === 'approve') {
+    // Replace the bullet in allBlocks with the suggested text
+    if (suggestion) block.bullets[bulletIdx] = suggestion.suggested;
+    statusEl.textContent = 'Approved'; statusEl.className = 'bullet-status bs-approved';
+    editTa.classList.remove('visible'); saveBtn.style.display = 'none';
+  } else if (action === 'skip') {
+    statusEl.textContent = 'Skipped'; statusEl.className = 'bullet-status bs-skipped';
+    editTa.classList.remove('visible'); saveBtn.style.display = 'none';
+  } else if (action === 'edit') {
+    editTa.classList.toggle('visible');
+    const isVisible = editTa.classList.contains('visible');
+    saveBtn.style.display = isVisible ? 'inline-flex' : 'none';
+  } else if (action === 'save-edit') {
+    const edited = editTa.value.trim();
+    if (!edited) return;
+    block.bullets[bulletIdx] = edited;
+    if (suggestion) suggestion.suggested = edited;
+    if (suggEl) suggEl.textContent = 'Suggested: ' + edited;
+    statusEl.textContent = 'Edited'; statusEl.className = 'bullet-status bs-approved';
+    editTa.classList.remove('visible'); saveBtn.style.display = 'none';
+  }
 }
 
 // ── LATEX: OVERLEAF IS THE COMPILER ──
