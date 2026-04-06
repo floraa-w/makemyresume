@@ -290,6 +290,23 @@ pre.latex-code{background:#18181a;color:#d4d0c8;border-radius:var(--r);padding:1
 .bs-approved{background:var(--green-light);color:var(--green)}
 .bs-skipped{background:var(--surface2);color:var(--text-3)}
 .bs-pending{background:var(--amber-bg);color:var(--amber)}
+/* Multi PDF list */
+.pdf-file-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--green-light);border:1px solid var(--green-pale);border-radius:var(--r);font-size:12px;color:var(--green)}
+.pdf-file-item .pdf-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.pdf-file-item .pdf-remove{cursor:pointer;color:var(--text-3);background:none;border:none;font-size:13px;padding:0 2px;line-height:1}
+.pdf-file-item .pdf-remove:hover{color:var(--red)}
+/* Application questions */
+.q-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden}
+.q-card-top{padding:.85rem 1rem;display:flex;align-items:flex-start;gap:10px}
+.q-input{flex:1;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.5;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--text);resize:vertical;min-height:60px}
+.q-input:focus{outline:none;border-color:var(--border-mid)}
+.q-remove{cursor:pointer;color:var(--text-3);background:none;border:none;font-size:16px;padding:2px;line-height:1;flex-shrink:0;margin-top:6px}
+.q-remove:hover{color:var(--red)}
+.q-answer-wrap{padding:0 1rem .85rem;display:flex;flex-direction:column;gap:.6rem}
+.q-answer-ta{width:100%;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.6;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface2);color:var(--text);resize:vertical;min-height:100px}
+.q-answer-ta:focus{outline:none;border-color:var(--border-mid)}
+.q-actions{display:flex;gap:8px;align-items:center}
+.q-loading{font-size:12px;color:var(--text-2);display:flex;align-items:center;gap:6px}
 footer{text-align:center;padding:2rem;font-size:12px;color:var(--text-3);border-top:1px solid var(--border)}
 footer a{color:var(--text-2);text-decoration:none}
 footer a:hover{color:var(--text)}
@@ -339,20 +356,17 @@ footer a:hover{color:var(--text)}
   <div id="section-input">
     <div class="input-grid">
       <div class="field-card">
-        <div class="field-label">Your CV / full experience</div>
+        <div class="field-label">Your CV / experience versions</div>
         <div class="upload-zone" id="upload-zone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-          <input type="file" id="pdf-file-input" accept=".pdf" onchange="handleFileSelect(event)"/>
+          <input type="file" id="pdf-file-input" accept=".pdf" multiple onchange="handleFileSelect(event)"/>
           <div class="upload-icon">📄</div>
-          <div class="upload-text">Drop your CV PDF here</div>
-          <div class="upload-sub">or click to browse</div>
+          <div class="upload-text">Drop CV PDF(s) here</div>
+          <div class="upload-sub">Upload multiple versions — AI picks best content from all</div>
         </div>
-        <div class="upload-success" id="upload-success">
-          <span>✅</span><span class="file-name" id="file-name-label"></span>
-          <button class="remove-btn" onclick="removePDF()">✕</button>
-        </div>
+        <div id="pdf-file-list" style="display:none;flex-direction:column;gap:6px;margin-top:4px"></div>
         <div class="or-divider">or paste text below</div>
-        <textarea class="cv-ta" id="cv-text" placeholder="Paste your full CV — all roles, dates, bullets, skills, education, certifications, projects…"></textarea>
-        <div class="hint">Include everything — the AI scores every role and picks the best fit.</div>
+        <textarea class="cv-ta" id="cv-text" placeholder="Paste your CV text here, or use the PDF upload above…"></textarea>
+        <div class="hint">Upload multiple resume versions — the AI reads all of them and picks the most up-to-date, relevant content for each role.</div>
       </div>
       <div class="field-card">
         <div class="field-label">Job description</div>
@@ -412,6 +426,7 @@ footer a:hover{color:var(--text)}
         <button class="tab-btn" onclick="switchTab('cover')">✉️ Cover letter</button>
         <button class="tab-btn" onclick="switchTab('blocks')">⠿ Edit blocks</button>
         <button class="tab-btn" onclick="switchTab('bullets')">✏️ Bullet suggestions</button>
+        <button class="tab-btn" onclick="switchTab('questions')">❓ App questions</button>
         <button class="tab-btn" onclick="switchTab('latex-resume')">{ } Resume LaTeX</button>
         <button class="tab-btn" onclick="switchTab('latex-cover')">{ } Cover letter LaTeX</button>
       </div>
@@ -470,6 +485,20 @@ footer a:hover{color:var(--text)}
           Analysing bullets against job description…
         </div>
         <div id="bullet-suggestions-list" style="display:flex;flex-direction:column;gap:1rem"></div>
+      </div>
+
+      <!-- APPLICATION QUESTIONS -->
+      <div class="tab-panel" id="tab-questions">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1.25rem">
+          <div>
+            <div style="font-size:15px;font-weight:500;margin-bottom:3px">Application questions</div>
+            <div style="font-size:13px;color:var(--text-2)">Paste in any questions from the application form and get tailored draft answers based on your CV and the job description.</div>
+          </div>
+        </div>
+        <div id="app-questions-list" style="display:flex;flex-direction:column;gap:1rem">
+          <!-- questions added dynamically -->
+        </div>
+        <button class="btn-dl secondary" onclick="addApplicationQuestion()" style="margin-top:.75rem;width:100%;justify-content:center">+ Add question</button>
       </div>
 
       <div class="tab-panel" id="tab-latex-resume">
@@ -557,43 +586,66 @@ updateKeyUI();
 // ── FILE UPLOAD ──
 function handleDragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('drag');}
 function handleDragLeave(){document.getElementById('upload-zone').classList.remove('drag');}
-function handleDrop(e){e.preventDefault();document.getElementById('upload-zone').classList.remove('drag');const f=e.dataTransfer.files[0];if(f&&f.type==='application/pdf')processPDF(f);else showError('Please drop a PDF file.');}
-function handleFileSelect(e){const f=e.target.files[0];if(f)processPDF(f);}
+function handleDrop(e){
+  e.preventDefault(); document.getElementById('upload-zone').classList.remove('drag');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+  if (files.length === 0) { showError('Please drop PDF files only.'); return; }
+  files.forEach(f => processPDF(f));
+}
+function handleFileSelect(e){
+  const files = Array.from(e.target.files);
+  files.forEach(f => processPDF(f));
+  e.target.value = ''; // allow re-selecting same file
+}
+// Multiple PDF storage
+window._cvPdfs = []; // [{name, base64}]
+
+async function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(new Error('Could not read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
 async function processPDF(file) {
-  document.getElementById('file-name-label').textContent = file.name;
-  document.getElementById('upload-success').classList.add('show');
-  document.getElementById('upload-zone').style.display = 'none';
-  const ta = document.getElementById('cv-text');
-  ta.value = 'Reading PDF…'; ta.disabled = true;
   try {
-    // Read PDF as base64 — will be sent directly to Claude API which reads PDFs natively
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = () => reject(new Error('Could not read file'));
-      reader.readAsDataURL(file);
-    });
-    // Store the base64 PDF so we can send it to the API
-    window._cvPdfBase64 = base64;
-    window._cvPdfName = file.name;
-    ta.value = '';
-    ta.placeholder = '✓ PDF loaded: ' + file.name + ' — AI will read it directly. You can also add extra notes here.';
-    ta.disabled = false;
+    const base64 = await readFileAsBase64(file);
+    window._cvPdfs.push({ name: file.name, base64 });
+    renderPDFList();
   } catch(err) {
-    ta.value = ''; ta.disabled = false;
-    showError('Could not read PDF: ' + err.message + '. Try pasting your CV as text instead.');
-    removePDF();
+    showError('Could not read ' + file.name + ': ' + err.message);
   }
 }
-function removePDF() {
-  document.getElementById('upload-success').classList.remove('show');
-  document.getElementById('upload-zone').style.display = '';
-  document.getElementById('pdf-file-input').value = '';
-  const ta = document.getElementById('cv-text');
-  ta.disabled = false;
-  if (ta.value.startsWith('(PDF loaded') || ta.value.startsWith('Reading')) ta.value = '';
-  window._cvPdfBase64 = null;
-  window._cvPdfName = null;
+
+function renderPDFList() {
+  const listEl = document.getElementById('pdf-file-list');
+  const zone   = document.getElementById('upload-zone');
+  if (!window._cvPdfs || window._cvPdfs.length === 0) {
+    listEl.style.display = 'none';
+    zone.style.display   = '';
+    return;
+  }
+  zone.style.display   = 'none';
+  listEl.style.display = 'flex';
+  listEl.innerHTML = window._cvPdfs.map((p, i) =>
+    '<div class="pdf-file-item"><span>📄</span><span class="pdf-name">' + esc(p.name) + '</span><button class="pdf-remove" onclick="removePDF(' + i + ')" title="Remove">✕</button></div>'
+  ).join('') +
+  '<div style="font-size:12px;color:var(--green-mid);cursor:pointer;padding:4px 0" onclick="document.getElementById(\'pdf-file-input\').click()">+ Add another version</div>';
+}
+
+function removePDF(idx) {
+  if (!window._cvPdfs) window._cvPdfs = [];
+  if (idx === undefined) {
+    window._cvPdfs = [];
+  } else {
+    window._cvPdfs.splice(idx, 1);
+  }
+  if (window._cvPdfs.length === 0) {
+    document.getElementById('pdf-file-input').value = '';
+  }
+  renderPDFList();
 }
 
 // ── STEPS ──
@@ -615,11 +667,12 @@ function showError(msg){const el=document.getElementById('error-bar');el.textCon
 function clearError(){document.getElementById('error-bar').classList.remove('show');}
 
 // ── TABS ──
-const ALL_TABS=['resume','cover','blocks','bullets','latex-resume','latex-cover'];
+const ALL_TABS=['resume','cover','blocks','bullets','questions','latex-resume','latex-cover'];
 function switchTab(name){
   ALL_TABS.forEach(t=>document.getElementById('tab-'+t).classList.toggle('active',t===name));
   document.querySelectorAll('.tab-btn').forEach((btn,i)=>btn.classList.toggle('active',i===ALL_TABS.indexOf(name)));
   if(name==='blocks')renderBlocks();
+  if(name==='questions' && document.getElementById('app-questions-list').children.length===0) addApplicationQuestion();
 }
 
 // ── EDIT MODE ──
@@ -679,35 +732,55 @@ function makeBlockEl(block,included){
   const kindBadge=isProject?'<span style="font-size:10px;padding:2px 7px;border-radius:100px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-pale)">project</span>':'';
   const metaParts=[block.company,block.date].filter(Boolean).join(' · ');
   el.innerHTML='<div class="block-handle"><div class="block-drag-icon">⠿</div><div class="block-body"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div class="block-title">'+esc(block.title)+'</div>'+kindBadge+'<span class="block-score-badge '+scoreClass+'">Score '+block.score+'/10</span></div><div class="block-meta">'+esc(metaParts)+'</div><div class="block-bullets">'+(block.bullets||[]).slice(0,2).map(function(b){return '• '+esc(b);}).join('<br>')+'</div></div></div>';
-  el.addEventListener('dragstart',e=>{dragSrcId=block.id;el.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
-  el.addEventListener('dragend',()=>{el.classList.remove('dragging');dragSrcId=null;});
-  el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over');});
-  el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));
+  el.addEventListener('dragstart',e=>{
+    dragSrcId=block.id;
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed='move';
+    e.dataTransfer.setData('text/plain', block.id); // required for Firefox
+  });
+  el.addEventListener('dragend',e=>{
+    el.classList.remove('dragging');
+    // Don't null dragSrcId here — drop fires after dragend in some browsers
+    setTimeout(()=>{dragSrcId=null;},50);
+  });
+  el.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();el.classList.add('drag-over');});
+  el.addEventListener('dragleave',e=>{e.stopPropagation();el.classList.remove('drag-over');});
   el.addEventListener('drop',e=>{
-    e.preventDefault();e.stopPropagation();el.classList.remove('drag-over');
-    if(!dragSrcId||dragSrcId===block.id)return;
-    // reorder within same column or move between columns
-    const srcBlock=allBlocks.find(b=>b.id===dragSrcId);
-    if(!srcBlock)return;
+    e.preventDefault();e.stopPropagation();
+    el.classList.remove('drag-over');
+    const srcId = e.dataTransfer.getData('text/plain') || dragSrcId;
+    if(!srcId || srcId===block.id) return;
+    const srcBlock=allBlocks.find(b=>b.id===srcId);
+    if(!srcBlock) return;
     srcBlock.included=block.included;
-    // reorder: move src before target
-    const srcIdx=allBlocks.findIndex(b=>b.id===dragSrcId);
+    const srcIdx=allBlocks.findIndex(b=>b.id===srcId);
     const tgtIdx=allBlocks.findIndex(b=>b.id===block.id);
     allBlocks.splice(srcIdx,1);
     allBlocks.splice(tgtIdx,0,srcBlock);
+    dragSrcId=null;
     renderBlocks();
   });
   return el;
 }
-function colDragOver(e,col){e.preventDefault();document.getElementById(col==='included'?'included-blocks':'excluded-blocks').style.outline='2px dashed var(--green-mid)';}
-function colDragLeave(e,col){document.getElementById(col==='included'?'included-blocks':'excluded-blocks').style.outline='';}
+function colDragOver(e,col){
+  e.preventDefault();e.stopPropagation();
+  document.getElementById(col==='included'?'included-blocks':'excluded-blocks').style.outline='2px dashed var(--green-mid)';
+}
+function colDragLeave(e,col){
+  // Only clear outline if leaving to outside the column entirely
+  const colEl=document.getElementById(col==='included'?'included-blocks':'excluded-blocks');
+  if(!colEl.contains(e.relatedTarget)) colEl.style.outline='';
+}
 function colDrop(e,col){
-  e.preventDefault();
-  document.getElementById(col==='included'?'included-blocks':'excluded-blocks').style.outline='';
-  if(!dragSrcId)return;
-  const srcBlock=allBlocks.find(b=>b.id===dragSrcId);
-  if(!srcBlock)return;
+  e.preventDefault();e.stopPropagation();
+  const colEl=document.getElementById(col==='included'?'included-blocks':'excluded-blocks');
+  colEl.style.outline='';
+  const srcId=e.dataTransfer.getData('text/plain') || dragSrcId;
+  if(!srcId) return;
+  const srcBlock=allBlocks.find(b=>b.id===srcId);
+  if(!srcBlock) return;
   srcBlock.included=(col==='included');
+  dragSrcId=null;
   renderBlocks();
 }
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -783,14 +856,13 @@ function renderAnalysis(data){
 async function startGeneration(){
   const key=getKey();if(!key){openModal();return;}
   const cvText    = document.getElementById('cv-text').value.trim();
-  const cvPdf     = window._cvPdfBase64 || null;
+  const cvPdfs    = window._cvPdfs && window._cvPdfs.length > 0 ? window._cvPdfs : null;
   const jd        = document.getElementById('jd-text').value.trim();
   const name      = document.getElementById('your-name').value.trim() || 'Your Name';
   const pageCount = Math.max(1, Math.min(10, parseInt(document.getElementById('page-count').value) || 1));
-  // Job title/company: use manual override if provided, otherwise AI will extract
   const manualJobTitle = document.getElementById('job-title-input').value.trim();
   const manualCompany  = document.getElementById('company-input').value.trim();
-  if (!cvText && !cvPdf) { showError('Please upload a CV PDF or paste your CV text.'); return; }
+  if (!cvText && !cvPdfs) { showError('Please upload a CV PDF or paste your CV text.'); return; }
   if (!jd) { showError('Please paste the job description.'); return; }
   clearError();
   document.getElementById('btn-gen').disabled = true;
@@ -864,7 +936,7 @@ OUTPUT — Return ONLY valid raw JSON, no markdown, no text outside the JSON.
 
   "resume_html": "<complete inner HTML — EXACTLY these classes: r-name, r-contact (with mailto/tel/https links), r-section, r-edu-header, r-edu-school, r-edu-date, r-edu-degree, r-job-title-row, r-job-title, r-job-location, r-job-company-row, r-job-company, r-job-date, ul>li, r-skills-row, r-skills-cat>",
 
-  "cover_html": "<inner HTML: <p> tags only — date, Dear Hiring Manager, 3-4 paragraphs, Sincerely + name>",
+  "cover_html": "<inner HTML: <p> tags only — use THIS exact date: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}, blank line, Dear Hiring Manager, 3-4 paragraphs, Sincerely + name>",
 
   "resume_tex": "<complete standalone LaTeX document using the RenderCV template below — fill in all NAME/EMAIL/PHONE/LINKEDIN/GITHUB placeholders with real data from the CV, and fill in all sections with the tailored content. Escape all special LaTeX chars: & \& | % \% | $ \$ | # \# | _ \_ | { \{ | } \} | ~ \textasciitilde{} | ^ \textasciicircum{} | \ \textbackslash{}. For the contact line use \\faEnvelope, \\faPhone*, \\faLinkedinIn, \\faGithub icons. Use twocolentry for each job/edu entry with the date in the right column. Use the highlights environment for bullets. Keep the exact preamble, environments, and spacing from the template.",
 
@@ -1073,20 +1145,19 @@ ${pageCount === 1 ? `FINAL CHECK (1-page mode): Count (number_of_roles × 5) + 6
 CANDIDATE NAME: ${name}
 TARGET ROLE: ${manualJobTitle || '(extract from job description)'} at ${manualCompany || '(extract from job description)'}
 RESUME LENGTH: ${pageCount} page${pageCount > 1 ? 's' : ''}
-${cvPdf ? 'FULL CV: The complete CV is provided above as a PDF document — read it carefully and use ALL experiences, projects, education, and skills from it.' : `FULL CV:\n${cvText}`}
+${cvPdfs ? 'FULL CV: ' + (cvPdfs.length > 1 ? cvPdfs.length + ' versions of the CV are provided above as PDF documents. Read ALL of them carefully. Prefer the most recent/updated content for each role and section. Merge and deduplicate — take the best version of each bullet point.' : 'The complete CV is provided above as a PDF — read it carefully and use ALL content from it.') : `FULL CV:\n${cvText}`}
 JOB DESCRIPTION:
 ${jd}`;
 
   try{
-    // Build message content — if PDF was uploaded, send it as a native document block
-    // so Claude can read it directly. Otherwise use the pasted text in the prompt.
+    // Build message: send all PDF versions as document blocks, then the prompt text
     let userContent;
-    if (cvPdf) {
+    if (cvPdfs && cvPdfs.length > 0) {
       userContent = [
-        {
+        ...cvPdfs.map(p => ({
           type: 'document',
-          source: { type: 'base64', media_type: 'application/pdf', data: cvPdf }
-        },
+          source: { type: 'base64', media_type: 'application/pdf', data: p.base64 }
+        })),
         { type: 'text', text: prompt }
       ];
     } else {
@@ -1156,7 +1227,10 @@ function resetApp(){
   document.getElementById('match-fill').style.width='0';
   document.getElementById('reasoning-card').classList.remove('show');
   resumePDFBlob=null; coverPDFBlob=null;
-  allBlocks=[];clearError();setStep(1);switchTab('resume');
+  allBlocks=[];questionCount=0;
+  const qlist=document.getElementById('app-questions-list');
+  if(qlist)qlist.innerHTML='';
+  clearError();setStep(1);switchTab('resume');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1331,6 +1405,98 @@ function bulletAction(action, blockId, bulletIdx) {
     editTa.classList.remove('visible'); saveBtn.style.display = 'none';
   }
 }
+
+// ── APPLICATION QUESTIONS ──
+let questionCount = 0;
+
+function addApplicationQuestion() {
+  questionCount++;
+  const id = 'q' + questionCount;
+  const list = document.getElementById('app-questions-list');
+  const card = document.createElement('div');
+  card.className = 'q-card';
+  card.id = 'qcard-' + id;
+  card.innerHTML = `
+    <div class="q-card-top">
+      <textarea class="q-input" id="qtext-${id}" placeholder="Paste the application question here…"></textarea>
+      <button class="q-remove" onclick="removeQuestion('${id}')" title="Remove">✕</button>
+    </div>
+    <div class="q-answer-wrap">
+      <div class="q-actions">
+        <button class="ba ba-approve" onclick="draftAnswer('${id}')">✨ Draft answer</button>
+        <div class="q-loading" id="qload-${id}" style="display:none"><div class="spinner" style="width:14px;height:14px;border-width:1.5px"></div> Drafting…</div>
+      </div>
+      <textarea class="q-answer-ta" id="qanswer-${id}" placeholder="Your drafted answer will appear here — you can edit it freely…" style="display:none"></textarea>
+    </div>`;
+  list.appendChild(card);
+  document.getElementById('qtext-' + id).focus();
+}
+
+function removeQuestion(id) {
+  const card = document.getElementById('qcard-' + id);
+  if (card) card.remove();
+}
+
+async function draftAnswer(id) {
+  const key = getKey();
+  if (!key) { openModal(); return; }
+  const question = document.getElementById('qtext-' + id).value.trim();
+  if (!question) { alert('Please enter a question first.'); return; }
+
+  const loadEl   = document.getElementById('qload-' + id);
+  const answerEl = document.getElementById('qanswer-' + id);
+  loadEl.style.display = 'flex';
+  answerEl.style.display = 'none';
+
+  const jd = window._jd || document.getElementById('jd-text').value;
+  const cvSummary = resumeHTML
+    ? 'Use the resume content already generated (provided in context).'
+    : 'Use the CV content provided.';
+
+  const prompt = `You are an expert job application writer. Draft a concise, specific answer to this application question for the candidate.
+
+Guidelines:
+- Write in first person, professional but natural tone
+- Reference specific experiences from the CV/resume that are most relevant
+- Keep to 150–250 words unless the question clearly requires more
+- Do NOT use bullet points — write in flowing paragraphs
+- Be specific and concrete, not generic
+- Tailor to the job description
+
+JOB DESCRIPTION:
+${jd}
+
+CANDIDATE'S RESUME (use this for specific examples):
+${resumeHTML || 'See CV documents provided separately.'}
+
+APPLICATION QUESTION:
+${question}
+
+Write only the answer — no preamble, no "Here is my answer:", just the answer itself.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const text = (data.content || []).map(b => b.text || '').join('').trim();
+    answerEl.value = text;
+    answerEl.style.display = 'block';
+    // Auto-resize
+    answerEl.style.height = 'auto';
+    answerEl.style.height = Math.min(400, answerEl.scrollHeight + 4) + 'px';
+  } catch(e) {
+    answerEl.value = 'Error: ' + e.message;
+    answerEl.style.display = 'block';
+  } finally {
+    loadEl.style.display = 'none';
+  }
+}
+
+// Auto-add one question on tab switch
+const _origSwitchTab = switchTab;
 
 // ── LATEX: OVERLEAF IS THE COMPILER ──
 let resumePDFBlob = null;
